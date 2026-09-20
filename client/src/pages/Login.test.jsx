@@ -9,6 +9,12 @@ vi.mock('../api/client', () => ({
   default: { post: vi.fn() },
 }))
 
+// The real Google Client ID lives in .env (loaded by Vite even in tests), so
+// the button would try to render for real here without this mock.
+vi.mock('@react-oauth/google', () => ({
+  GoogleLogin: () => null,
+}))
+
 function renderLogin() {
   return render(
     <MemoryRouter initialEntries={['/login']}>

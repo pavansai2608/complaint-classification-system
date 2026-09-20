@@ -1,9 +1,18 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import axios from 'axios'
 import Register from './Register.jsx'
 
 vi.mock('axios')
+
+function renderRegister() {
+  return render(
+    <MemoryRouter>
+      <Register />
+    </MemoryRouter>,
+  )
+}
 
 function fillForm({ name = 'Riya', email = 'riya@example.com', password = 'secret123' } = {}) {
   fireEvent.change(screen.getByLabelText('Name'), { target: { value: name } })
@@ -18,7 +27,7 @@ describe('Register', () => {
 
   it('shows a success message after a successful registration', async () => {
     axios.post.mockResolvedValueOnce({ data: { user: { email: 'riya@example.com' } } })
-    render(<Register />)
+    renderRegister()
 
     fillForm()
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
@@ -38,7 +47,7 @@ describe('Register', () => {
         },
       },
     })
-    render(<Register />)
+    renderRegister()
 
     fillForm({ password: 'short' })
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
@@ -54,7 +63,7 @@ describe('Register', () => {
         },
       },
     })
-    render(<Register />)
+    renderRegister()
 
     fillForm()
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
@@ -64,7 +73,7 @@ describe('Register', () => {
 
   it('shows a generic error when the request fails unexpectedly', async () => {
     axios.post.mockRejectedValueOnce(new Error('Network error'))
-    render(<Register />)
+    renderRegister()
 
     fillForm()
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))

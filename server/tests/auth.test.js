@@ -19,7 +19,7 @@ jest.mock('../src/services/authService');
 
 const request = require('supertest');
 const { createApp } = require('../src/app');
-const { registerUser, loginUser, refreshSession } = require('../src/services/authService');
+const { registerUser, loginUser, loginWithGoogle, refreshSession } = require('../src/services/authService');
 const { ApiError } = require('../src/utils/ApiError');
 
 const app = createApp({ clientOrigin: 'http://localhost:5173' });
@@ -143,6 +143,44 @@ describe('POST /api/auth/login', () => {
 
     expect(res.status).toBe(423);
     expect(res.body.error.code).toBe('ACCOUNT_LOCKED');
+  });
+});
+
+describe('POST /api/auth/google', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('signs in, sets an httpOnly refresh cookie, and returns the access token', async () => {
+    loginWithGoogle.mockResolvedValueOnce({
+      user: { id: '1', name: 'Riya', email: 'riya@example.com', role: 'customer' },
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    });
+
+    const res = await request(app).post('/api/auth/google').send({ credential: 'valid-id-token' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBe('access-token');
+    expect(loginWithGoogle).toHaveBeenCalledWith('valid-id-token');
+    const cookie = res.headers['set-cookie'].find((c) => c.startsWith('refreshToken='));
+    expect(cookie).toMatch(/HttpOnly/);
+  });
+
+  it('rejects a request with no credential before it reaches the service', async () => {
+    const res = await request(app).post('/api/auth/google').send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(loginWithGoogle).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 for a Google token that fails verification', async () => {
+    loginWithGoogle.mockRejectedValueOnce(new ApiError(401, 'INVALID_GOOGLE_TOKEN', 'Could not verify Google sign-in'));
+
+    const res = await request(app).post('/api/auth/google').send({ credential: 'bad-token' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('INVALID_GOOGLE_TOKEN');
+    expect(res.headers['set-cookie']).toBeUndefined();
   });
 });
 
