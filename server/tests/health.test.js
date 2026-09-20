@@ -1,7 +1,17 @@
-jest.mock('mongoose', () => ({
-  connect: jest.fn(),
-  connection: { readyState: 0 },
-}));
+jest.mock('mongoose', () => {
+  class Schema {
+    constructor() {
+      this.methods = {};
+    }
+    index() {}
+  }
+  return {
+    connect: jest.fn(),
+    connection: { readyState: 0 },
+    Schema,
+    model: jest.fn(() => ({})),
+  };
+});
 
 const mongoose = require('mongoose');
 const request = require('supertest');
@@ -46,17 +56,17 @@ describe('GET /api/health', () => {
 });
 
 describe('Unknown routes and bad input', () => {
-  it('returns 404 JSON for unknown routes', async () => {
+  it('returns 404 in the standard error shape for unknown routes', async () => {
     const res = await request(app).get('/api/does-not-exist');
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: 'Not found' });
+    expect(res.body).toEqual({ error: { code: 'NOT_FOUND', message: 'Not found' } });
   });
 
   it('rejects JSON bodies larger than 10kb', async () => {
     const bigBody = { text: 'a'.repeat(20 * 1024) };
     const res = await request(app).post('/api/health').send(bigBody);
     expect(res.status).toBe(413);
-    expect(res.body.error).toBeDefined();
+    expect(res.body.error.code).toBe('PAYLOAD_TOO_LARGE');
     expect(res.text).not.toMatch(/at .*\.js/);
   });
 
@@ -66,6 +76,7 @@ describe('Unknown routes and bad input', () => {
       .set('Content-Type', 'application/json')
       .send('{"broken":');
     expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('BAD_REQUEST');
     expect(res.text).not.toMatch(/at .*\.js/);
   });
 });
