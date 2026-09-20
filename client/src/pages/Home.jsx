@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { roleHomePath } from '../utils/roles'
 
 function Home() {
   const [serverStatus, setServerStatus] = useState('checking')
-  const { user, ready, logout } = useAuth()
+  const { user, ready } = useAuth()
 
   useEffect(() => {
     fetch('/api/health')
@@ -13,7 +14,11 @@ function Home() {
       .catch(() => setServerStatus('down'))
   }, [])
 
-  const initial = user?.name ? user.name.charAt(0).toUpperCase() : '?'
+  // A logged-in visitor lands on their own role page instead of this
+  // logged-out landing page.
+  if (ready && user) {
+    return <Navigate to={roleHomePath(user.role)} replace />
+  }
 
   return (
     <div className="page">
@@ -36,24 +41,6 @@ function Home() {
         <p className="lede">
           Raise a complaint, track where it stands, and get a resolution — all from one place.
         </p>
-
-        {ready && user && (
-          <div className="home-actions">
-            <span className="user-chip">
-              <span className="user-chip-avatar" aria-hidden="true">
-                {initial}
-              </span>
-              <span className="user-chip-text">
-                <span className="user-chip-name">
-                  Logged in as {user.name} ({user.role})
-                </span>
-              </span>
-            </span>
-            <button type="button" className="btn-secondary" onClick={logout}>
-              Log out
-            </button>
-          </div>
-        )}
 
         {ready && !user && (
           <div className="home-actions">
