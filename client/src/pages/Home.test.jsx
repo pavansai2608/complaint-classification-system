@@ -1,17 +1,30 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
+import { AuthProvider } from '../context/AuthContext'
+import apiClient from '../api/client'
 import Home from './Home.jsx'
+
+vi.mock('../api/client', () => ({
+  default: { post: vi.fn() },
+}))
 
 function renderHome() {
   return render(
     <MemoryRouter>
-      <Home />
+      <AuthProvider>
+        <Home />
+      </AuthProvider>
     </MemoryRouter>,
   )
 }
 
 describe('Home', () => {
+  beforeEach(() => {
+    apiClient.post.mockReset()
+    apiClient.post.mockRejectedValue(new Error('no session'))
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -31,12 +44,25 @@ describe('Home', () => {
     expect(await screen.findByText('down')).toBeInTheDocument()
   })
 
-  it('links to the register page', () => {
+  it('shows log in and register links when no one is logged in', async () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     renderHome()
-    expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
-      'href',
-      '/register',
-    )
+    expect(await screen.findByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: 'create an account' })).toHaveAttribute('href', '/register')
+  })
+
+  it('shows the logged-in user and a log out button once the session is restored', async () => {
+    apiClient.post.mockImplementation((url) => {
+      if (url === '/api/auth/refresh') {
+        return Promise.resolve({ data: { user: { name: 'Riya', role: 'agent' }, accessToken: 'token' } })
+      }
+      return Promise.resolve({})
+    })
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+
+    renderHome()
+
+    expect(await screen.findByText('Logged in as Riya (agent)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
   })
 })

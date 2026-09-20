@@ -15,4 +15,11 @@ const registerValidator = [
     .withMessage('Password must contain at least one number'),
 ];
 
-module.exports = { registerValidator };
+// Login only checks that both fields are present; the account/password
+// check itself happens in the service, against the database.
+const loginValidator = [
+  body('email').trim().isEmail().withMessage('Enter a valid email address').normalizeEmail(),
+  body('password').notEmpty().withMessage('Password is required'),
+];
+
+module.exports = { registerValidator, loginValidator };
