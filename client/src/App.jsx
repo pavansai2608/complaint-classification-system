@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './routes/ProtectedRoute'
+import RoleRoute from './routes/RoleRoute'
 import Home from './pages/Home'
 import Register from './pages/Register'
 import Login from './pages/Login'
+import RoleHome from './pages/RoleHome'
 import './App.css'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -15,6 +18,18 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<RoleRoute allow={['customer']} />}>
+            <Route path="/customer" element={<RoleHome />} />
+          </Route>
+          <Route element={<RoleRoute allow={['agent']} />}>
+            <Route path="/agent" element={<RoleHome />} />
+          </Route>
+          <Route element={<RoleRoute allow={['admin']} />}>
+            <Route path="/admin" element={<RoleHome />} />
+          </Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   )

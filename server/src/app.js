@@ -4,7 +4,12 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { isConnected } = require('./config/db');
 const { ApiError } = require('./utils/ApiError');
+const { authenticate } = require('./middleware/authenticate');
+const { requireRole } = require('./middleware/requireRole');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const agentRoutes = require('./routes/agentRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -26,6 +31,9 @@ function createApp({ clientOrigin }) {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/users', authenticate, userRoutes);
+  app.use('/api/agent', authenticate, requireRole('agent'), agentRoutes);
+  app.use('/api/admin', authenticate, requireRole('admin'), adminRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });

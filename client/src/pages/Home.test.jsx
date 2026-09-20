@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '../context/AuthContext'
 import apiClient from '../api/client'
@@ -11,9 +11,12 @@ vi.mock('../api/client', () => ({
 
 function renderHome() {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/']}>
       <AuthProvider>
-        <Home />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/agent" element={<p>Agent page</p>} />
+        </Routes>
       </AuthProvider>
     </MemoryRouter>,
   )
@@ -51,7 +54,7 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: 'create an account' })).toHaveAttribute('href', '/register')
   })
 
-  it('shows the logged-in user and a log out button once the session is restored', async () => {
+  it('redirects a logged-in user to their role page instead of showing this page', async () => {
     apiClient.post.mockImplementation((url) => {
       if (url === '/api/auth/refresh') {
         return Promise.resolve({ data: { user: { name: 'Riya', role: 'agent' }, accessToken: 'token' } })
@@ -62,7 +65,6 @@ describe('Home', () => {
 
     renderHome()
 
-    expect(await screen.findByText('Logged in as Riya (agent)')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+    expect(await screen.findByText('Agent page')).toBeInTheDocument()
   })
 })
