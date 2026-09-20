@@ -6,7 +6,7 @@ import apiClient from '../api/client'
 import Home from './Home.jsx'
 
 vi.mock('../api/client', () => ({
-  default: { post: vi.fn() },
+  default: { post: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
 function renderHome() {

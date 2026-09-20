@@ -10,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const complaintRoutes = require('./routes/complaintRoutes');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -34,6 +35,7 @@ function createApp({ clientOrigin }) {
   app.use('/api/users', authenticate, userRoutes);
   app.use('/api/agent', authenticate, requireRole('agent'), agentRoutes);
   app.use('/api/admin', authenticate, requireRole('admin'), adminRoutes);
+  app.use('/api/complaints', authenticate, requireRole('customer'), complaintRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });

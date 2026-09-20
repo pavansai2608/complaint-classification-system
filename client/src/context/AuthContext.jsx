@@ -10,6 +10,10 @@ function AuthProvider({ children }) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    apiClient.defaults.headers.common.Authorization = accessToken ? `Bearer ${accessToken}` : undefined
+  }, [accessToken])
+
+  useEffect(() => {
     // The access token only ever lives in memory, so a page reload loses
     // it. Try to get a new one from the httpOnly refresh cookie instead of
     // forcing the user to log in again every time they refresh the page.

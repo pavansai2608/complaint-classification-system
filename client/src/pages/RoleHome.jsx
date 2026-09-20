@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const ROLE_CONTENT = {
@@ -17,8 +18,10 @@ const ROLE_CONTENT = {
 
 function RoleHome() {
   const { user, logout } = useAuth()
+  const location = useLocation()
   const content = ROLE_CONTENT[user.role]
   const initial = user.name ? user.name.charAt(0).toUpperCase() : '?'
+  const complaintSubmitted = Boolean(location.state?.complaintSubmitted)
 
   return (
     <div className="page">
@@ -35,7 +38,19 @@ function RoleHome() {
         <h1>{content.title}</h1>
         <p className="lede">{content.lede}</p>
 
+        {complaintSubmitted && (
+          <p className="status-pill" role="status">
+            <span className="status-dot ok" aria-hidden="true" />
+            Complaint submitted
+          </p>
+        )}
+
         <div className="home-actions">
+          {user.role === 'customer' && (
+            <Link to="/complaints/new" className="btn-primary-link">
+              Submit a complaint
+            </Link>
+          )}
           <span className="user-chip">
             <span className="user-chip-avatar" aria-hidden="true">
               {initial}

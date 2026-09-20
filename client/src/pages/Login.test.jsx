@@ -6,7 +6,7 @@ import apiClient from '../api/client'
 import Login from './Login.jsx'
 
 vi.mock('../api/client', () => ({
-  default: { post: vi.fn() },
+  default: { post: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
 // The real Google Client ID lives in .env (loaded by Vite even in tests), so

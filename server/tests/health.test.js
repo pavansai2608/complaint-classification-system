@@ -5,6 +5,7 @@ jest.mock('mongoose', () => {
     }
     index() {}
   }
+  Schema.Types = { ObjectId: 'ObjectId' };
   return {
     connect: jest.fn(),
     connection: { readyState: 0 },

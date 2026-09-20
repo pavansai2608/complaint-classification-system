@@ -7,7 +7,7 @@ import ProtectedRoute from '../routes/ProtectedRoute.jsx'
 import RoleHome from './RoleHome.jsx'
 
 vi.mock('../api/client', () => ({
-  default: { post: vi.fn() },
+  default: { post: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
 function renderAsRole(role) {

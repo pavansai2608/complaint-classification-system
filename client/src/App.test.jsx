@@ -4,7 +4,7 @@ import apiClient from './api/client'
 import App from './App.jsx'
 
 vi.mock('./api/client', () => ({
-  default: { post: vi.fn() },
+  default: { post: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
 describe('App', () => {
