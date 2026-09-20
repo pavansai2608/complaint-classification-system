@@ -1,14 +1,30 @@
+jest.mock('mongoose', () => ({
+  connect: jest.fn(),
+  connection: { readyState: 0 },
+}));
+
+const mongoose = require('mongoose');
 const request = require('supertest');
 const { createApp } = require('../src/app');
 
 const CLIENT_ORIGIN = 'http://localhost:5173';
 const app = createApp({ clientOrigin: CLIENT_ORIGIN });
 
+afterEach(() => {
+  mongoose.connection.readyState = 0;
+});
+
 describe('GET /api/health', () => {
-  it('returns 200 and status ok', async () => {
+  it('returns 200 and reports the database as disconnected by default', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: 'ok' });
+    expect(res.body).toEqual({ status: 'ok', database: 'disconnected' });
+  });
+
+  it('reports the database as connected when Mongoose is connected', async () => {
+    mongoose.connection.readyState = 1;
+    const res = await request(app).get('/api/health');
+    expect(res.body).toEqual({ status: 'ok', database: 'connected' });
   });
 
   it('sends security headers and hides X-Powered-By', async () => {
