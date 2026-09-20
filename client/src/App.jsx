@@ -1,23 +1,16 @@
-import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Home from './pages/Home'
+import Register from './pages/Register'
 import './App.css'
 
 function App() {
-  const [serverStatus, setServerStatus] = useState('checking')
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Bad response'))))
-      .then((data) => setServerStatus(data.status === 'ok' ? 'ok' : 'down'))
-      .catch(() => setServerStatus('down'))
-  }, [])
-
   return (
-    <main className="app">
-      <h1>Complaint Resolution System</h1>
-      <p>
-        Server status: <strong data-testid="server-status">{serverStatus}</strong>
-      </p>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

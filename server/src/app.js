@@ -2,6 +2,8 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const { isConnected } = require('./config/db');
+const { ApiError } = require('./utils/ApiError');
+const authRoutes = require('./routes/authRoutes');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -19,17 +21,34 @@ function createApp({ clientOrigin }) {
     res.json({ status: 'ok', database: isConnected() ? 'connected' : 'disconnected' });
   });
 
+  app.use('/api/auth', authRoutes);
+
   app.use((req, res) => {
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });
   });
 
-  // Never send stack traces or internal details to the client.
-  // Express needs all 4 arguments to treat this as the error handler.
+  // Single error handler for the whole API, so every route returns errors in
+  // the same shape (SDD 7.3). Express needs all 4 arguments to treat this as
+  // the error handler.
   app.use((err, req, res, next) => {
+    if (err instanceof ApiError) {
+      if (err.statusCode >= 500) console.error(err);
+      return res.status(err.statusCode).json({
+        error: {
+          code: err.code,
+          message: err.message,
+          ...(err.details ? { details: err.details } : {}),
+        },
+      });
+    }
+
+    // Anything not thrown by our own code: bad JSON, an oversized body, or a
+    // genuine bug. Never send a stack trace or internal details to the client.
     const status = err.status || err.statusCode || 500;
-    const message = status < 500 ? err.message : 'Internal server error';
+    const code = status === 413 ? 'PAYLOAD_TOO_LARGE' : status < 500 ? 'BAD_REQUEST' : 'INTERNAL_ERROR';
+    const message = status < 500 ? err.message || 'Bad request' : 'Internal server error';
     if (status >= 500) console.error(err);
-    res.status(status).json({ error: message });
+    res.status(status).json({ error: { code, message } });
   });
 
   return app;
