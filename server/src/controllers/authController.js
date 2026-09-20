@@ -1,4 +1,4 @@
-const { registerUser, loginUser, refreshSession } = require('../services/authService');
+const { registerUser, loginUser, loginWithGoogle, refreshSession } = require('../services/authService');
 
 const REFRESH_COOKIE = 'refreshToken';
 const REFRESH_COOKIE_OPTIONS = {
@@ -31,6 +31,17 @@ async function login(req, res, next) {
   }
 }
 
+async function google(req, res, next) {
+  try {
+    const { credential } = req.body;
+    const { user, accessToken, refreshToken } = await loginWithGoogle(credential);
+    res.cookie(REFRESH_COOKIE, refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.json({ user, accessToken });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function refresh(req, res, next) {
   try {
     const token = req.cookies?.[REFRESH_COOKIE];
@@ -50,4 +61,4 @@ function logout(req, res) {
   res.status(204).end();
 }
 
-module.exports = { register, login, refresh, logout };
+module.exports = { register, login, google, refresh, logout };

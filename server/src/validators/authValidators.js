@@ -22,4 +22,8 @@ const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
-module.exports = { registerValidator, loginValidator };
+// Just checks a token was sent; the token itself is verified against Google
+// in the service.
+const googleValidator = [body('credential').notEmpty().withMessage('Missing Google credential')];
+
+module.exports = { registerValidator, loginValidator, googleValidator };

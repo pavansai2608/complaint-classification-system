@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const { ApiError } = require('../utils/ApiError');
 const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('./tokenService');
+const { verifyGoogleIdToken } = require('./googleAuth');
 
 // FR-02: cost factor 12, matches SDD 11.1.
 const BCRYPT_COST = 12;
@@ -83,6 +84,67 @@ async function loginUser({ email, password }) {
   };
 }
 
+function googleAuthError() {
+  return new ApiError(401, 'INVALID_GOOGLE_TOKEN', 'Could not verify Google sign-in');
+}
+
+async function loginWithGoogle(idToken) {
+  let payload;
+  try {
+    payload = await verifyGoogleIdToken(idToken);
+  } catch (err) {
+    throw googleAuthError();
+  }
+
+  // Only trust an email Google itself has verified as belonging to the
+  // person signing in — otherwise anyone could link an account they don't
+  // control.
+  if (!payload || !payload.email_verified) {
+    throw googleAuthError();
+  }
+
+  let user = await User.findOne({ googleId: payload.sub });
+
+  if (!user) {
+    // Do NOT auto-link to an existing account just because the email
+    // matches: anyone could have registered that email with a password
+    // they made up, without proving they own the mailbox. Auto-linking
+    // would let that attacker's password account silently gain the real
+    // owner's identity the moment the real owner signs in with Google.
+    const emailTaken = await User.findOne({ email: payload.email });
+    if (emailTaken) {
+      throw new ApiError(
+        409,
+        'CONFLICT',
+        'An account with this email already exists. Log in with your password instead.',
+      );
+    }
+
+    try {
+      user = await User.create({ name: payload.name || payload.email, email: payload.email, googleId: payload.sub });
+    } catch (err) {
+      if (err.code === 11000) {
+        throw new ApiError(
+          409,
+          'CONFLICT',
+          'An account with this email already exists. Log in with your password instead.',
+        );
+      }
+      throw err;
+    }
+  }
+
+  if (!user.isActive) {
+    throw googleAuthError();
+  }
+
+  return {
+    user,
+    accessToken: signAccessToken(user),
+    refreshToken: signRefreshToken(user),
+  };
+}
+
 async function refreshSession(refreshToken) {
   let payload;
   try {
@@ -105,4 +167,4 @@ async function refreshSession(refreshToken) {
   };
 }
 
-module.exports = { registerUser, loginUser, refreshSession };
+module.exports = { registerUser, loginUser, loginWithGoogle, refreshSession };

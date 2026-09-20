@@ -11,11 +11,13 @@ jest.mock('../src/services/tokenService', () => ({
   signRefreshToken: jest.fn(() => 'refresh-token'),
   verifyRefreshToken: jest.fn(),
 }));
+jest.mock('../src/services/googleAuth', () => ({ verifyGoogleIdToken: jest.fn() }));
 
 const bcrypt = require('bcrypt');
 const User = require('../src/models/User');
 const { verifyRefreshToken } = require('../src/services/tokenService');
-const { registerUser, loginUser, refreshSession } = require('../src/services/authService');
+const { verifyGoogleIdToken } = require('../src/services/googleAuth');
+const { registerUser, loginUser, loginWithGoogle, refreshSession } = require('../src/services/authService');
 
 describe('registerUser', () => {
   afterEach(() => jest.clearAllMocks());
@@ -77,6 +79,7 @@ function makeUser(overrides = {}) {
     isActive: true,
     failedLogins: 0,
     lockUntil: null,
+    save: jest.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -199,6 +202,112 @@ describe('loginUser', () => {
     await expect(loginUser({ email: 'riya@example.com', password: 'wrong' })).rejects.toMatchObject({
       statusCode: 401,
       code: 'INVALID_CREDENTIALS',
+    });
+  });
+});
+
+describe('loginWithGoogle', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  function makeGooglePayload(overrides = {}) {
+    return {
+      sub: 'google-sub-1',
+      email: 'riya@example.com',
+      email_verified: true,
+      name: 'Riya',
+      ...overrides,
+    };
+  }
+
+  it('logs in an existing Google user matched by googleId', async () => {
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload());
+    const user = makeUser({ googleId: 'google-sub-1' });
+    User.findOne.mockResolvedValueOnce(user);
+
+    const result = await loginWithGoogle('valid-id-token');
+
+    expect(result.user).toBe(user);
+    expect(result.accessToken).toBe('access-token');
+    expect(User.findOne).toHaveBeenCalledWith({ googleId: 'google-sub-1' });
+    expect(User.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects sign-in when the email already belongs to a different account, instead of silently linking to it', async () => {
+    // A Google-verified email matching an existing password account is NOT
+    // proof that account belongs to the same person — anyone could have
+    // registered that email with a made-up password. Auto-linking here
+    // would let that attacker's account silently inherit the real owner's
+    // Google identity.
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload());
+    const existing = makeUser({ googleId: undefined });
+    User.findOne.mockResolvedValueOnce(null); // no match by googleId
+    User.findOne.mockResolvedValueOnce(existing); // match by email
+
+    await expect(loginWithGoogle('valid-id-token')).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'CONFLICT',
+    });
+    expect(existing.googleId).toBeUndefined();
+    expect(existing.save).not.toHaveBeenCalled();
+    expect(User.create).not.toHaveBeenCalled();
+  });
+
+  it('turns a duplicate-key race on account creation into the same 409, like registerUser does', async () => {
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload({ email: 'new@example.com' }));
+    User.findOne.mockResolvedValueOnce(null);
+    User.findOne.mockResolvedValueOnce(null);
+    const dupError = new Error('duplicate key');
+    dupError.code = 11000;
+    User.create.mockRejectedValueOnce(dupError);
+
+    await expect(loginWithGoogle('valid-id-token')).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'CONFLICT',
+    });
+  });
+
+  it('creates a new account for a first-time Google sign-in', async () => {
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload({ email: 'new@example.com' }));
+    User.findOne.mockResolvedValueOnce(null);
+    User.findOne.mockResolvedValueOnce(null);
+    User.create.mockResolvedValueOnce(makeUser({ email: 'new@example.com', googleId: 'google-sub-1' }));
+
+    await loginWithGoogle('valid-id-token');
+
+    expect(User.create).toHaveBeenCalledWith({
+      name: 'Riya',
+      email: 'new@example.com',
+      googleId: 'google-sub-1',
+    });
+  });
+
+  it('rejects a token that fails Google verification', async () => {
+    verifyGoogleIdToken.mockRejectedValueOnce(new Error('invalid token'));
+
+    await expect(loginWithGoogle('bad-token')).rejects.toMatchObject({
+      statusCode: 401,
+      code: 'INVALID_GOOGLE_TOKEN',
+    });
+    expect(User.findOne).not.toHaveBeenCalled();
+  });
+
+  it('rejects a Google account whose email Google has not verified', async () => {
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload({ email_verified: false }));
+
+    await expect(loginWithGoogle('valid-id-token')).rejects.toMatchObject({
+      statusCode: 401,
+      code: 'INVALID_GOOGLE_TOKEN',
+    });
+    expect(User.findOne).not.toHaveBeenCalled();
+  });
+
+  it('rejects sign-in for a deactivated account', async () => {
+    verifyGoogleIdToken.mockResolvedValueOnce(makeGooglePayload());
+    User.findOne.mockResolvedValueOnce(makeUser({ googleId: 'google-sub-1', isActive: false }));
+
+    await expect(loginWithGoogle('valid-id-token')).rejects.toMatchObject({
+      statusCode: 401,
+      code: 'INVALID_GOOGLE_TOKEN',
     });
   });
 });
