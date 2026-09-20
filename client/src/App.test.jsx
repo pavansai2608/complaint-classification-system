@@ -1,8 +1,18 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
+import apiClient from './api/client'
 import App from './App.jsx'
 
+vi.mock('./api/client', () => ({
+  default: { post: vi.fn() },
+}))
+
 describe('App', () => {
+  beforeEach(() => {
+    apiClient.post.mockReset()
+    apiClient.post.mockRejectedValue(new Error('no session'))
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -18,5 +28,11 @@ describe('App', () => {
     window.history.pushState({}, '', '/register')
     render(<App />)
     expect(screen.getByRole('heading', { name: 'Create an account' })).toBeInTheDocument()
+  })
+
+  it('shows the login page at /login', () => {
+    window.history.pushState({}, '', '/login')
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument()
   })
 })
