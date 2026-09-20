@@ -1,6 +1,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const { isConnected } = require('./config/db');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -15,7 +16,7 @@ function createApp({ clientOrigin }) {
   app.use(express.json({ limit: '10kb' }));
 
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', database: isConnected() ? 'connected' : 'disconnected' });
   });
 
   app.use((req, res) => {
