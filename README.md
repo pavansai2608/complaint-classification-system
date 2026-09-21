@@ -52,6 +52,17 @@ cd client && npm test
 cd ai-service && source .venv/bin/activate && pyb
 ```
 
+## Continuous integration
+
+A `Jenkinsfile` at the repo root runs the server, client and ai-service test suites in parallel on every push, each in its own throwaway Docker container (`node:20-alpine` / `python:3.11-slim`) so the Jenkins host itself doesn't need Node or Python installed. A failing test fails the build.
+
+To set this up on a Jenkins instance:
+
+1. Install the **Docker Pipeline** plugin (for the `agent { docker { ... } }` blocks) and the **GitHub Branch Source** plugin.
+2. New Item → **Multibranch Pipeline**, point it at this repo's URL, and set the script path to `Jenkinsfile` (the default).
+3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
+4. No credentials are needed for the test stage today - the test suites mock all external calls. When a later stage needs real credentials (registry push, deploy), add them under **Manage Jenkins → Credentials** and reference them by ID in the `Jenkinsfile`; never put a real secret in the file itself.
+
 ## Contributing
 
 Branch names, commit messages and the merge steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
