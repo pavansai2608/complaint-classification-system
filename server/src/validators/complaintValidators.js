@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 // FR: title 5-120 chars, description 10-2000 chars, order reference optional
 // but capped so it can't be used to smuggle in an oversized value.
@@ -15,4 +15,6 @@ const createComplaintValidator = [
     .withMessage('Order reference must be at most 60 characters'),
 ];
 
-module.exports = { createComplaintValidator };
+const getComplaintValidator = [param('id').isMongoId().withMessage('Invalid complaint id')];
+
+module.exports = { createComplaintValidator, getComplaintValidator };

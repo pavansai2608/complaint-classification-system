@@ -47,9 +47,14 @@ function RoleHome() {
 
         <div className="home-actions">
           {user.role === 'customer' && (
-            <Link to="/complaints/new" className="btn-primary-link">
-              Submit a complaint
-            </Link>
+            <>
+              <Link to="/complaints/new" className="btn-primary-link">
+                Submit a complaint
+              </Link>
+              <Link to="/complaints" className="btn-secondary">
+                View my complaints
+              </Link>
+            </>
           )}
           <span className="user-chip">
             <span className="user-chip-avatar" aria-hidden="true">

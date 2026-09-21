@@ -23,7 +23,11 @@ const request = require('supertest');
 const { createApp } = require('../src/app');
 const { signAccessToken } = require('../src/services/tokenService');
 const { getCurrentUser } = require('../src/services/userService');
-const { createComplaint } = require('../src/services/complaintService');
+const {
+  createComplaint,
+  listComplaintsForCustomer,
+  getComplaintForCustomer,
+} = require('../src/services/complaintService');
 const { ApiError } = require('../src/utils/ApiError');
 
 const app = createApp({ clientOrigin: 'http://localhost:5173' });
@@ -120,5 +124,74 @@ describe('POST /api/complaints', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.details.some((d) => d.field === 'description')).toBe(true);
     expect(createComplaint).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/complaints/mine', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('rejects a request with no token', async () => {
+    const res = await request(app).get('/api/complaints/mine');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns only the logged-in customer\'s complaints', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    listComplaintsForCustomer.mockResolvedValueOnce([
+      { id: 'complaint-1', title: 'Order damaged', status: 'Open' },
+    ]);
+
+    const res = await request(app)
+      .get('/api/complaints/mine')
+      .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.complaints).toHaveLength(1);
+    expect(listComplaintsForCustomer).toHaveBeenCalledWith('customer-id');
+  });
+});
+
+describe('GET /api/complaints/:id', () => {
+  const validId = '507f1f77bcf86cd799439011';
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('rejects a request with no token', async () => {
+    const res = await request(app).get(`/api/complaints/${validId}`);
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a malformed complaint id before it reaches the service', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    const res = await request(app)
+      .get('/api/complaints/not-a-valid-id')
+      .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(400);
+    expect(getComplaintForCustomer).not.toHaveBeenCalled();
+  });
+
+  it('returns a complaint the customer owns', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    getComplaintForCustomer.mockResolvedValueOnce({ id: validId, title: 'Order damaged', status: 'Open' });
+
+    const res = await request(app)
+      .get(`/api/complaints/${validId}`)
+      .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.complaint.id).toBe(validId);
+    expect(getComplaintForCustomer).toHaveBeenCalledWith(validId, 'customer-id');
+  });
+
+  it('returns 404 for a complaint that belongs to another customer', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    getComplaintForCustomer.mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .get(`/api/complaints/${validId}`)
+      .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(404);
   });
 });

@@ -8,6 +8,8 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import RoleHome from './pages/RoleHome'
 import NewComplaint from './pages/NewComplaint'
+import MyComplaints from './pages/MyComplaints'
+import ComplaintDetail from './pages/ComplaintDetail'
 import './App.css'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -24,6 +26,8 @@ function AppRoutes() {
           <Route element={<RoleRoute allow={['customer']} />}>
             <Route path="/customer" element={<RoleHome />} />
             <Route path="/complaints/new" element={<NewComplaint />} />
+            <Route path="/complaints" element={<MyComplaints />} />
+            <Route path="/complaints/:id" element={<ComplaintDetail />} />
           </Route>
           <Route element={<RoleRoute allow={['agent']} />}>
             <Route path="/agent" element={<RoleHome />} />
