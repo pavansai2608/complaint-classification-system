@@ -1,0 +1,43 @@
+Category model evaluation - 2026-09-22T01:07:23.657235
+Dataset: hblim/customer-complaints (Hugging Face, MIT license)
+Training pool: 1471 rows (train+validation), held-out test: 211 rows
+
+5-fold cross-validation accuracy on training pool: 0.824 (+/- 0.015)
+
+Held-out test set accuracy: 0.796
+
+=== Classification report ===
+              precision    recall  f1-score   support
+
+     billing       0.78      0.78      0.78        67
+    delivery       0.83      0.78      0.80        68
+     product       0.79      0.83      0.81        76
+
+    accuracy                           0.80       211
+   macro avg       0.80      0.79      0.80       211
+weighted avg       0.80      0.80      0.80       211
+
+=== Confusion matrix ===
+Labels (row=true, col=predicted): ['billing', 'delivery', 'product']
+[[52  5 10]
+ [ 8 53  7]
+ [ 7  6 63]]
+
+=== Error analysis: worst-performing categories ===
+billing: F1=0.776, precision=0.776, recall=0.776
+delivery: F1=0.803, precision=0.828, recall=0.779
+
+=== Bias/fairness sanity check: error rate by complaint length ===
+short (<25 chars): n=29, error rate=0.138
+medium (25-45): n=162, error rate=0.216
+long (45+): n=20, error rate=0.200
+
+=== Bias/fairness sanity check: error rate by category ===
+billing: n=67, error rate=0.224
+delivery: n=68, error rate=0.221
+product: n=76, error rate=0.171
+
+=== Interpretability: top TF-IDF-weighted words per category ===
+billing: charge, billed, fee, billing, charged, account, charging, invoice, plan, isn
+delivery: delivery, package, driver, delivered, order, left, box, items, tracking, delayed
+product: doesn, product, won, item, packaging, screen, loose, paint, included, missing
