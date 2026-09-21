@@ -728,3 +728,48 @@
   margin: 0 0 var(--space-2);
   font-size: 1.0625rem;
 }
+
+/* Layout and footer: the footer sits at the bottom of every page */
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-layout-content {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-layout-content > .page,
+.app-layout-content > .auth-page {
+  flex: 1 0 auto;
+  min-height: 0;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.site-footer-links {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.site-footer a {
+  color: #e2e8f0;
+}
+
+.site-footer a:hover {
+  color: #fff;
+}

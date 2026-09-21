@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRoute from './routes/RoleRoute'
+import Layout from './components/Layout'
 import Home from './pages/Home'
 import Register from './pages/Register'
 import Login from './pages/Login'
@@ -20,21 +21,23 @@ function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<RoleRoute allow={['customer']} />}>
-            <Route path="/customer" element={<RoleHome />} />
-            <Route path="/complaints/new" element={<NewComplaint />} />
-            <Route path="/complaints" element={<MyComplaints />} />
-            <Route path="/complaints/:id" element={<ComplaintDetail />} />
-          </Route>
-          <Route element={<RoleRoute allow={['agent']} />}>
-            <Route path="/agent" element={<RoleHome />} />
-            <Route path="/agent/queue" element={<AgentQueue />} />
-            <Route path="/agent/complaints/:id" element={<AgentComplaintDetail />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<RoleRoute allow={['customer']} />}>
+              <Route path="/customer" element={<RoleHome />} />
+              <Route path="/complaints/new" element={<NewComplaint />} />
+              <Route path="/complaints" element={<MyComplaints />} />
+              <Route path="/complaints/:id" element={<ComplaintDetail />} />
+            </Route>
+            <Route element={<RoleRoute allow={['agent']} />}>
+              <Route path="/agent" element={<RoleHome />} />
+              <Route path="/agent/queue" element={<AgentQueue />} />
+              <Route path="/agent/complaints/:id" element={<AgentComplaintDetail />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

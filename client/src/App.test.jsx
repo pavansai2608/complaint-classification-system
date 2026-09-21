@@ -35,4 +35,16 @@ describe('App', () => {
     render(<App />)
     expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument()
   })
+
+  it('shows the footer on the home and login pages', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    window.history.pushState({}, '', '/')
+    const { unmount } = render(<App />)
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    unmount()
+
+    window.history.pushState({}, '', '/login')
+    render(<App />)
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
 })
