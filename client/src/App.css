@@ -815,3 +815,15 @@
   align-items: flex-start;
   gap: var(--space-4);
 }
+
+/* About page */
+
+.about-section {
+  width: 100%;
+}
+
+.about-section h2 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 1.25rem;
+  color: #fff;
+}

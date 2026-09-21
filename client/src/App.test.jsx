@@ -63,4 +63,19 @@ describe('App', () => {
     expect(await screen.findByRole('link', { name: 'Log in' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/')
   })
+
+  it('shows the About page at /about', () => {
+    window.history.pushState({}, '', '/about')
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'About this app' })).toBeInTheDocument()
+  })
+
+  it('reaches the About page from the footer', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    window.history.pushState({}, '', '/login')
+    render(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'About' }))
+    expect(screen.getByRole('heading', { name: 'About this app' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/about')
+  })
 })
