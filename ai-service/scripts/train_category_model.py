@@ -1,6 +1,7 @@
 """Train the TF-IDF + Logistic Regression complaint category model.
 
-Run from ai-service/:
+Run from ai-service/ (EDA first, then training):
+    .venv/bin/python scripts/eda_category_model.py
     .venv/bin/python scripts/train_category_model.py
 """
 
@@ -12,7 +13,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 AI_SERVICE_ROOT = Path(__file__).resolve().parents[1]
@@ -24,18 +25,52 @@ TEXT_COLUMN = "text"
 LABEL_COLUMN = "label"
 
 
-def load_split(name: str) -> pd.DataFrame:
-    df = pd.read_csv(DATA_DIR / f"customer_complaints_{name}.csv")
-    return df.dropna(subset=[TEXT_COLUMN, LABEL_COLUMN])
+def load_clean_splits():
+    """Load train/validation/test, then remove data-quality problems found by
+    the EDA script: rows where the same complaint text has different labels
+    across splits, and exact duplicate rows that leak across the train/test
+    boundary. Both are dropped globally so a given text appears in exactly
+    one split, with one label.
+    """
+    frames = []
+    for split in ("train", "validation", "test"):
+        df = pd.read_csv(DATA_DIR / f"customer_complaints_{split}.csv").dropna(subset=[TEXT_COLUMN, LABEL_COLUMN])
+        df["split"] = split
+        frames.append(df)
+    combined = pd.concat(frames, ignore_index=True)
+
+    label_counts_per_text = combined.groupby(TEXT_COLUMN)[LABEL_COLUMN].nunique()
+    ambiguous_texts = set(label_counts_per_text[label_counts_per_text > 1].index)
+    combined = combined[~combined[TEXT_COLUMN].isin(ambiguous_texts)]
+
+    combined = combined.drop_duplicates(subset=[TEXT_COLUMN], keep="first")
+
+    return (
+        combined[combined["split"] == "train"],
+        combined[combined["split"] == "validation"],
+        combined[combined["split"] == "test"],
+        len(ambiguous_texts),
+    )
 
 
 def build_pipeline() -> Pipeline:
     return Pipeline(
         [
-            ("tfidf", TfidfVectorizer(ngram_range=(1, 2), min_df=1, stop_words="english")),
+            ("tfidf", TfidfVectorizer(stop_words="english")),
             ("clf", LogisticRegression(max_iter=1000, class_weight="balanced")),
         ]
     )
+
+
+def tune(X_train, y_train) -> GridSearchCV:
+    param_grid = {
+        "tfidf__ngram_range": [(1, 1), (1, 2)],
+        "tfidf__min_df": [1, 2],
+        "clf__C": [0.1, 1, 5, 10],
+    }
+    search = GridSearchCV(build_pipeline(), param_grid, cv=5, scoring="accuracy", n_jobs=-1)
+    search.fit(X_train, y_train)
+    return search
 
 
 def error_analysis(y_test, y_pred, lines):
@@ -75,23 +110,17 @@ def interpretability(pipeline: Pipeline, lines, top_n=10):
 
 
 def main():
-    train_df = load_split("train")
-    val_df = load_split("validation")
-    test_df = load_split("test")
-
-    # Use train+validation together as the training pool (cross-validated
-    # below), keep test fully held out for the final, honest evaluation.
+    train_df, val_df, test_df, ambiguous_dropped = load_clean_splits()
     train_pool = pd.concat([train_df, val_df], ignore_index=True)
+    print(f"Dropped {ambiguous_dropped} ambiguous-label texts and de-duplicated across splits")
     print(f"Training pool: {len(train_pool)} rows, held-out test: {len(test_df)} rows")
     print(train_pool[LABEL_COLUMN].value_counts())
 
     X_train, y_train = train_pool[TEXT_COLUMN], train_pool[LABEL_COLUMN]
     X_test, y_test = test_df[TEXT_COLUMN], test_df[LABEL_COLUMN]
 
-    pipeline = build_pipeline()
-    cv_scores = cross_val_score(pipeline, X_train, y_train, cv=5, scoring="accuracy")
-
-    pipeline.fit(X_train, y_train)
+    search = tune(X_train, y_train)
+    pipeline = search.best_estimator_
     y_pred = pipeline.predict(X_test)
 
     accuracy = accuracy_score(y_test, y_pred)
@@ -101,8 +130,12 @@ def main():
     lines = [
         f"Category model evaluation - {datetime.datetime.now().isoformat()}",
         "Dataset: hblim/customer-complaints (Hugging Face, MIT license)",
+        f"Preprocessing: dropped {ambiguous_dropped} texts with conflicting labels across splits, "
+        "de-duplicated exact-match complaint text globally so no text leaks across train/test.",
         f"Training pool: {len(X_train)} rows (train+validation), held-out test: {len(X_test)} rows",
-        f"\n5-fold cross-validation accuracy on training pool: {cv_scores.mean():.3f} (+/- {cv_scores.std():.3f})",
+        f"\nHyperparameter search (5-fold CV grid search over ngram_range, min_df, C):",
+        f"Best params: {search.best_params_}",
+        f"Best cross-validation accuracy on training pool: {search.best_score_:.3f}",
         f"\nHeld-out test set accuracy: {accuracy:.3f}",
         "\n=== Classification report ===",
         classification_report(y_test, y_pred, zero_division=0),

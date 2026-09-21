@@ -1,0 +1,46 @@
+Category model evaluation - 2026-09-22T01:31:23.554770
+Dataset: hblim/customer-complaints (Hugging Face, MIT license)
+Preprocessing: dropped 3 texts with conflicting labels across splits, de-duplicated exact-match complaint text globally so no text leaks across train/test.
+Training pool: 1464 rows (train+validation), held-out test: 208 rows
+
+Hyperparameter search (5-fold CV grid search over ngram_range, min_df, C):
+Best params: {'clf__C': 10, 'tfidf__min_df': 1, 'tfidf__ngram_range': (1, 2)}
+Best cross-validation accuracy on training pool: 0.837
+
+Held-out test set accuracy: 0.788
+
+=== Classification report ===
+              precision    recall  f1-score   support
+
+     billing       0.77      0.73      0.75        66
+    delivery       0.82      0.80      0.81        66
+     product       0.78      0.83      0.80        76
+
+    accuracy                           0.79       208
+   macro avg       0.79      0.79      0.79       208
+weighted avg       0.79      0.79      0.79       208
+
+=== Confusion matrix ===
+Labels (row=true, col=predicted): ['billing', 'delivery', 'product']
+[[48  7 11]
+ [ 6 53  7]
+ [ 8  5 63]]
+
+=== Error analysis: worst-performing categories ===
+billing: F1=0.750, precision=0.774, recall=0.727
+product: F1=0.803, precision=0.778, recall=0.829
+
+=== Bias/fairness sanity check: error rate by complaint length ===
+short (<25 chars): n=29, error rate=0.172
+medium (25-45): n=159, error rate=0.226
+long (45+): n=20, error rate=0.150
+
+=== Bias/fairness sanity check: error rate by category ===
+billing: n=66, error rate=0.273
+delivery: n=66, error rate=0.197
+product: n=76, error rate=0.171
+
+=== Interpretability: top TF-IDF-weighted words per category ===
+billing: charge, billed, fee, billing, account, invoice, charging, charged, plan, price
+delivery: delivery, package, driver, delivered, left, order, box, tracking, delayed, items
+product: doesn, product, packaging, won, screen, loose, screws, plastic, color, works
