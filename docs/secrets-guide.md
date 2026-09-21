@@ -51,12 +51,17 @@ Look for anything that looks like a password, token or key. `git status` must ne
 
 ## GitHub protection
 
-Two GitHub features catch mistakes. The repo owner turns them on once:
+Two GitHub features catch mistakes. They are free for public repositories. Only the repo owner (or an admin) can turn them on, because only they see the **Settings** tab. Do it once:
 
-1. Open the repository on GitHub, then **Settings**.
-2. Open **Code security**.
-3. Turn on **Secret scanning**.
-4. Turn on **Push protection**.
+1. Open the repository on GitHub and click the **Settings** tab. If you do not see it, click the **...** menu at the end of the tab row.
+2. In the left sidebar, under **Security and quality**, click **Advanced Security**.
+3. Next to **Secret Protection**, click **Enable**, then confirm with **Enable Secret Protection**. This turns on secret scanning.
+4. Next to **Push protection**, click **Enable**.
+5. Refresh the page. Both should now say **Enabled**.
+
+Shortcut: `https://github.com/<owner>/<repo>/settings/security_analysis` opens the same area (replace `<owner>/<repo>` with this repository's owner and name).
+
+On the same page you can also enable **Private vulnerability reporting**, which the security policy (`SECURITY.md`) relies on.
 
 With push protection on, GitHub blocks a push that contains a known kind of secret. If your push is blocked, do not choose to allow it. Remove the secret from your commit:
 
