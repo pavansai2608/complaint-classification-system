@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import apiClient from '../api/client'
+import EmptyState from '../components/EmptyState'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function statusClass(status) {
   return `complaint-status complaint-status-${(status || 'open').toLowerCase().replace(/\s+/g, '-')}`
@@ -69,7 +71,9 @@ function AgentQueue() {
           </p>
         )}
 
-        {!loading && !error && items.length === 0 && <p className="lede">The queue is empty.</p>}
+        {loading && <LoadingSpinner label="Loading the queue..." />}
+
+        {!loading && !error && items.length === 0 && <EmptyState message="The queue is empty." />}
 
         {items.length > 0 && (
           <ul className="complaint-list">

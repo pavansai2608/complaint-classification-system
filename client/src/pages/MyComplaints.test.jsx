@@ -44,6 +44,25 @@ describe('MyComplaints', () => {
     expect(await screen.findByText('You haven’t submitted any complaints yet.')).toBeInTheDocument()
   })
 
+  it('offers a button to submit a first complaint when the list is empty', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: { complaints: [] } })
+
+    renderPage()
+
+    const buttons = await screen.findAllByRole('link', { name: 'Submit a complaint' })
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]).toHaveAttribute('href', '/complaints/new')
+  })
+
+  it('shows a loading indicator until the complaints arrive', async () => {
+    apiClient.get.mockReturnValueOnce(new Promise(() => {}))
+
+    renderPage()
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading your complaints...')
+    expect(screen.queryByText('You haven’t submitted any complaints yet.')).not.toBeInTheDocument()
+  })
+
   it('shows an error message if loading fails', async () => {
     apiClient.get.mockRejectedValueOnce(new Error('network error'))
 

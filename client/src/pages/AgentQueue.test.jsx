@@ -65,6 +65,15 @@ describe('AgentQueue', () => {
     expect(await screen.findByText('The queue is empty.')).toBeInTheDocument()
   })
 
+  it('shows a loading indicator until the queue arrives', async () => {
+    apiClient.get.mockReturnValueOnce(new Promise(() => {}))
+
+    renderPage()
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading the queue...')
+    expect(screen.queryByText('The queue is empty.')).not.toBeInTheDocument()
+  })
+
   it('shows an error message if loading fails', async () => {
     apiClient.get.mockRejectedValueOnce(new Error('network error'))
 

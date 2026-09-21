@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../api/client'
+import EmptyState from '../components/EmptyState'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 function statusClass(status) {
   return `complaint-status complaint-status-${status.toLowerCase().replace(/\s+/g, '-')}`
@@ -29,6 +31,8 @@ function MyComplaints() {
     }
   }, [])
 
+  const showEmpty = !loading && !error && complaints.length === 0
+
   return (
     <div className="page">
       <header className="top-bar">
@@ -50,8 +54,14 @@ function MyComplaints() {
           </p>
         )}
 
-        {!loading && !error && complaints.length === 0 && (
-          <p className="lede">You haven&rsquo;t submitted any complaints yet.</p>
+        {loading && <LoadingSpinner label="Loading your complaints..." />}
+
+        {showEmpty && (
+          <EmptyState
+            message="You haven’t submitted any complaints yet."
+            actionLabel="Submit a complaint"
+            actionTo="/complaints/new"
+          />
         )}
 
         {complaints.length > 0 && (
@@ -67,11 +77,13 @@ function MyComplaints() {
           </ul>
         )}
 
-        <div className="home-actions">
-          <Link to="/complaints/new" className="btn-primary-link">
-            Submit a complaint
-          </Link>
-        </div>
+        {!showEmpty && (
+          <div className="home-actions">
+            <Link to="/complaints/new" className="btn-primary-link">
+              Submit a complaint
+            </Link>
+          </div>
+        )}
       </main>
     </div>
   )
