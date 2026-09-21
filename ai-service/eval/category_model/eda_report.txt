@@ -1,0 +1,36 @@
+Category model EDA - 1682 total rows across train/validation/test
+
+=== Rows per split ===
+train: 1261
+test: 211
+validation: 210
+
+=== Missing values ===
+{'text': 0, 'label': 0}
+
+=== Duplicate complaint text rows: 7 ===
+
+=== Same text, different label across rows (ambiguous): 3 ===
+"I didn’t get what I paid for  " -> ['delivery', 'billing']
+"This is not what I ordered  " -> ['product', 'delivery']
+"You ignored my cancellation  " -> ['product', 'billing']
+
+=== Duplicate texts spanning more than one split (train/test leakage): 4 ===
+
+=== Class balance (all splits combined) ===
+product: 590 rows (35.1%)
+billing: 555 rows (33.0%)
+delivery: 537 rows (31.9%)
+
+=== Complaint text length (characters) ===
+min=15, max=67, mean=34.4, median=34.0
+
+=== Complaint text length by category ===
+billing: mean=36.3, median=36.0
+delivery: mean=38.8, median=39.0
+product: mean=28.6, median=28.0
+
+=== Most common words per category (raw word counts, not TF-IDF) ===
+billing: charge, why, no, charged, billing, still, never, billed, bill, didn’t
+delivery: delivery, package, driver, no, delivered, they, left, order, why, wrong
+product: doesn’t, wrong, no, item, off, all, won’t, missing, one, product

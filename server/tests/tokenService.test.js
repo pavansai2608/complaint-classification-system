@@ -32,7 +32,7 @@ describe('tokenService', () => {
   });
 
   it('rejects a token signed with a different secret entirely', () => {
-    const forged = jwt.sign({ sub: 'user-1', role: 'admin' }, 'wrong-secret');
+    const forged = jwt.sign({ sub: 'user-1', role: 'agent' }, 'wrong-secret');
     expect(() => verifyAccessToken(forged)).toThrow();
   });
 });

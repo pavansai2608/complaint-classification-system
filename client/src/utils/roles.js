@@ -1,7 +1,6 @@
 const ROLE_HOME_PATHS = {
   customer: '/customer',
   agent: '/agent',
-  admin: '/admin',
 }
 
 function roleHomePath(role) {

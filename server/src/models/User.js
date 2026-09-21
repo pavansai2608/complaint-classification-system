@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
     // null, Mongo would treat all of them as sharing that one null value and
     // block the second user from ever being created.
     googleId: { type: String },
-    role: { type: String, enum: ['customer', 'agent', 'admin'], default: 'customer' },
+    role: { type: String, enum: ['customer', 'agent'], default: 'customer' },
     isActive: { type: Boolean, default: true },
     // Brute-force protection (FR-08), used once login is built.
     failedLogins: { type: Number, default: 0 },

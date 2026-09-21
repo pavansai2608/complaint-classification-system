@@ -1,4 +1,9 @@
-const { createComplaint, listComplaintsForCustomer, getComplaintForCustomer } = require('../services/complaintService');
+const {
+  createComplaint,
+  listComplaintsForCustomer,
+  getComplaintForCustomer,
+  updateComplaintStatus,
+} = require('../services/complaintService');
 const { ApiError } = require('../utils/ApiError');
 
 async function create(req, res, next) {
@@ -30,4 +35,14 @@ async function getOne(req, res, next) {
   }
 }
 
-module.exports = { create, listMine, getOne };
+async function updateStatus(req, res, next) {
+  try {
+    const complaint = await updateComplaintStatus(req.params.id, req.body.status, req.user.id);
+    if (!complaint) return next(new ApiError(404, 'NOT_FOUND', 'Complaint not found'));
+    res.json({ complaint });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, listMine, getOne, updateStatus };

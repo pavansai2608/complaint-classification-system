@@ -1,10 +1,10 @@
 const express = require('express');
+const { queue } = require('../controllers/agentController');
+const { getQueueValidator } = require('../validators/complaintValidators');
+const { validate } = require('../middleware/validate');
 
 const router = express.Router();
 
-// Placeholder until the agent workflow epic builds the real priority queue.
-router.get('/queue', (req, res) => {
-  res.json({ items: [] });
-});
+router.get('/queue', getQueueValidator, validate, queue);
 
 module.exports = router;

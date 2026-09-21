@@ -27,6 +27,7 @@ const {
   createComplaint,
   listComplaintsForCustomer,
   getComplaintForCustomer,
+  updateComplaintStatus,
 } = require('../src/services/complaintService');
 const { ApiError } = require('../src/utils/ApiError');
 
@@ -191,6 +192,77 @@ describe('GET /api/complaints/:id', () => {
     const res = await request(app)
       .get(`/api/complaints/${validId}`)
       .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('PATCH /api/complaints/:id/status', () => {
+  const validId = '507f1f77bcf86cd799439011';
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('rejects a request with no token', async () => {
+    const res = await request(app).patch(`/api/complaints/${validId}/status`).send({ status: 'Resolved' });
+    expect(res.status).toBe(401);
+    expect(updateComplaintStatus).not.toHaveBeenCalled();
+  });
+
+  it('blocks a customer from updating status', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    const res = await request(app)
+      .patch(`/api/complaints/${validId}/status`)
+      .set('Authorization', `Bearer ${tokenFor('customer')}`)
+      .send({ status: 'Resolved' });
+
+    expect(res.status).toBe(403);
+    expect(updateComplaintStatus).not.toHaveBeenCalled();
+  });
+
+  it('lets an agent update the status', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    updateComplaintStatus.mockResolvedValueOnce({ id: validId, status: 'In Progress' });
+
+    const res = await request(app)
+      .patch(`/api/complaints/${validId}/status`)
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ status: 'In Progress' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.complaint.status).toBe('In Progress');
+    expect(updateComplaintStatus).toHaveBeenCalledWith(validId, 'In Progress', 'agent-id');
+  });
+
+  it('rejects an invalid status value before it reaches the service', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    const res = await request(app)
+      .patch(`/api/complaints/${validId}/status`)
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ status: 'Cancelled' });
+
+    expect(res.status).toBe(400);
+    expect(updateComplaintStatus).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed complaint id before it reaches the service', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    const res = await request(app)
+      .patch('/api/complaints/not-a-valid-id/status')
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ status: 'Resolved' });
+
+    expect(res.status).toBe(400);
+    expect(updateComplaintStatus).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the complaint does not exist', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    updateComplaintStatus.mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .patch(`/api/complaints/${validId}/status`)
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ status: 'Resolved' });
 
     expect(res.status).toBe(404);
   });
