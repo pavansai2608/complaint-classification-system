@@ -18,11 +18,13 @@ jest.mock('mongoose', () => {
 });
 jest.mock('../src/services/authService');
 jest.mock('../src/services/userService');
+jest.mock('../src/services/complaintService');
 
 const request = require('supertest');
 const { createApp } = require('../src/app');
 const { signAccessToken } = require('../src/services/tokenService');
 const { getCurrentUser } = require('../src/services/userService');
+const { getAgentQueue } = require('../src/services/complaintService');
 const { ApiError } = require('../src/utils/ApiError');
 
 const app = createApp({ clientOrigin: 'http://localhost:5173' });
@@ -61,9 +63,10 @@ describe('role-protected routes', () => {
 
   it('lets an agent read /api/agent/queue', async () => {
     getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getAgentQueue.mockResolvedValueOnce({ items: [], total: 0, page: 1, limit: 20 });
     const res = await request(app).get('/api/agent/queue').set('Authorization', `Bearer ${tokenFor('agent')}`);
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ items: [] });
+    expect(res.body).toEqual({ items: [], total: 0, page: 1, limit: 20 });
   });
 
   it('rejects a valid token once the account behind it has been deactivated', async () => {
