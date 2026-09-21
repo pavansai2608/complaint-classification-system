@@ -44,6 +44,21 @@ npm install
 npm run dev
 ```
 
+## Run with Docker
+
+Requirements: Docker and Docker Compose.
+
+```bash
+cp .env.example .env
+cp server/.env.example server/.env
+cp ai-service/.env.example ai-service/.env
+# fill in the real values in each .env file (JWT secrets, Google client ID,
+# Gemini API key) - see the comments in each .env.example for where to get them
+docker compose up --build
+```
+
+This starts MongoDB, the server (http://localhost:4000), the ai-service (http://localhost:8000) and the client (http://localhost:8080) together, all talking to each other over the compose network. No secrets are baked into any image - each service reads its own `.env` file at container start, and the client's Google Client ID (the only frontend value, and a public identifier, not a secret) is passed in as a build arg from the root `.env`.
+
 ## Tests
 
 ```bash
