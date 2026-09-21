@@ -52,6 +52,11 @@ function RoleHome() {
               </Link>
             </>
           )}
+          {user.role === 'agent' && (
+            <Link to="/agent/queue" className="btn-primary-link">
+              View priority queue
+            </Link>
+          )}
           <span className="user-chip">
             <span className="user-chip-avatar" aria-hidden="true">
               {initial}

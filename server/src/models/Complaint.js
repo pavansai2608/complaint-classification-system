@@ -21,6 +21,15 @@ const complaintSchema = new mongoose.Schema(
     analysisPending: { type: Boolean, default: false },
     statusUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     statusUpdatedAt: { type: Date, default: null },
+    agentReply: { type: String, default: null },
+    repliedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    repliedAt: { type: Date, default: null },
+    // Captured (not yet used for retraining) when an agent overrides the
+    // AI's category or priority before sending - real correction data for
+    // a future active-learning pass.
+    wasCorrected: { type: Boolean, default: false },
+    originalCategory: { type: String, default: null },
+    originalPriority: { type: String, default: null },
   },
   { timestamps: true },
 );

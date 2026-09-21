@@ -2,7 +2,9 @@ const {
   createComplaint,
   listComplaintsForCustomer,
   getComplaintForCustomer,
+  getComplaintById,
   updateComplaintStatus,
+  sendComplaintReply,
 } = require('../services/complaintService');
 const { ApiError } = require('../utils/ApiError');
 
@@ -27,7 +29,11 @@ async function listMine(req, res, next) {
 
 async function getOne(req, res, next) {
   try {
-    const complaint = await getComplaintForCustomer(req.params.id, req.user.id);
+    // Customers can only see their own complaint; agents work the whole queue.
+    const complaint =
+      req.user.role === 'agent'
+        ? await getComplaintById(req.params.id)
+        : await getComplaintForCustomer(req.params.id, req.user.id);
     if (!complaint) return next(new ApiError(404, 'NOT_FOUND', 'Complaint not found'));
     res.json({ complaint });
   } catch (err) {
@@ -45,4 +51,15 @@ async function updateStatus(req, res, next) {
   }
 }
 
-module.exports = { create, listMine, getOne, updateStatus };
+async function reply(req, res, next) {
+  try {
+    const { reply: replyText, category, priority } = req.body;
+    const complaint = await sendComplaintReply(req.params.id, { reply: replyText, category, priority }, req.user.id);
+    if (!complaint) return next(new ApiError(404, 'NOT_FOUND', 'Complaint not found'));
+    res.json({ complaint });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, listMine, getOne, updateStatus, reply };

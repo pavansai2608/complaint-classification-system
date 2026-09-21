@@ -47,4 +47,20 @@ describe('RoleHome', () => {
     expect(screen.getByText(`Logged in as Riya (${role})`)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
   })
+
+  it('shows a link to the priority queue for agents', async () => {
+    renderAsRole('agent')
+
+    expect(await screen.findByRole('link', { name: 'View priority queue' })).toHaveAttribute(
+      'href',
+      '/agent/queue',
+    )
+  })
+
+  it('does not show the priority queue link for customers', async () => {
+    renderAsRole('customer')
+
+    await screen.findByText('Your complaints')
+    expect(screen.queryByRole('link', { name: 'View priority queue' })).not.toBeInTheDocument()
+  })
 })

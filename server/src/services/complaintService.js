@@ -43,6 +43,11 @@ async function getComplaintForCustomer(complaintId, customerId) {
   return Complaint.findOne({ _id: complaintId, customer: customerId });
 }
 
+// No ownership check: agents work the whole queue, not just their own complaints.
+async function getComplaintById(complaintId) {
+  return Complaint.findById(complaintId);
+}
+
 // Returns null if the complaint doesn't exist, so the controller can 404
 // without an agent being able to tell "missing" from "not yours to see" -
 // agents can act on any complaint, so there's no ownership check here.
@@ -52,6 +57,38 @@ async function updateComplaintStatus(complaintId, status, agentId) {
     { status, statusUpdatedBy: agentId, statusUpdatedAt: new Date() },
     { new: true },
   );
+}
+
+// Returns null if the complaint doesn't exist. Resolves the complaint as
+// part of sending the reply, matching the agent workflow: review, correct
+// if needed, send, done - one action, not a separate "mark resolved" step.
+async function sendComplaintReply(complaintId, { reply, category, priority }, agentId) {
+  const complaint = await Complaint.findById(complaintId);
+  if (!complaint) return null;
+
+  const categoryChanged = category && category !== complaint.category;
+  const priorityChanged = priority && priority !== complaint.priority;
+
+  complaint.agentReply = reply;
+  complaint.repliedBy = agentId;
+  complaint.repliedAt = new Date();
+  complaint.status = 'Resolved';
+  complaint.statusUpdatedBy = agentId;
+  complaint.statusUpdatedAt = complaint.repliedAt;
+
+  if (categoryChanged || priorityChanged) {
+    complaint.wasCorrected = true;
+    if (categoryChanged) {
+      complaint.originalCategory = complaint.category;
+      complaint.category = category;
+    }
+    if (priorityChanged) {
+      complaint.originalPriority = complaint.priority;
+      complaint.priority = priority;
+    }
+  }
+
+  return complaint.save();
 }
 
 // Priority is stored as a string enum, so it can't be sorted alphabetically -
@@ -100,6 +137,8 @@ module.exports = {
   createComplaint,
   listComplaintsForCustomer,
   getComplaintForCustomer,
+  getComplaintById,
   updateComplaintStatus,
+  sendComplaintReply,
   getAgentQueue,
 };
