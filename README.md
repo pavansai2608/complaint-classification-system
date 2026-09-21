@@ -51,3 +51,7 @@ cd server && npm test
 cd client && npm test
 cd ai-service && source .venv/bin/activate && pyb
 ```
+
+## Contributing
+
+Branch names, commit messages and the merge steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
