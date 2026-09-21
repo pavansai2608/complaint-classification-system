@@ -2,9 +2,9 @@
 
 How to use the Complaint Resolution System. There is one section for customers and one for agents.
 
-**What is in this guide today:** everything a customer can do, and how an agent logs in. The agent screens for the priority queue, editing and sending replies, and resolving complaints are not in the app yet, so those steps are listed as "coming" at the end of the agent section. Add the steps and screenshots when each screen is built.
+New words are explained in the [glossary and FAQ](glossary-faq.md).
 
-All screenshots were taken from the running app with made-up data.
+All screenshots were taken from the running app with made-up data. The category, priority and suggested reply shown in the agent screenshots came from a stand-in analysis service, so real results will differ.
 
 ## Customers
 
@@ -79,6 +79,10 @@ Please do not write passwords, card numbers or other private details in a compla
 
    ![Complaint details](images/09-complaint-detail.png)
 
+4. When an agent replies, the status changes to Resolved and the reply appears on the complaint's page under "Reply from support". The app does not send emails yet, so check the page.
+
+   ![Reply from support](images/14-customer-reply.png)
+
 You can only see your own complaints.
 
 ## Agents
@@ -88,23 +92,42 @@ You can only see your own complaints.
 Agent accounts are not created on the sign-up page. That page always creates a customer account. Ask the project team for an agent account.
 
 1. Open the log in page, enter your email and password, and select **Log in**.
-2. You land on the **Priority queue** page. Select **Log out** when you finish.
+2. You land on the agent home page. Select **View priority queue**. Select **Log out** when you finish.
 
    ![Agent home](images/10-agent-home.png)
 
-A customer cannot open the agent page, and an agent cannot open the customer pages.
+A customer cannot open the agent pages, and an agent cannot open the customer pages.
 
-### 2. Work through the queue, reply and resolve (coming)
+### 2. Work through the priority queue
 
-The server can already list open complaints sorted by priority (Urgent first) and let an agent change a complaint's status to Open, In Progress or Resolved. The screens that use them are not built yet:
+The queue lists **open** complaints. The highest priority is first (Urgent, High, Medium, Low). Older complaints come before newer ones of the same priority. Each row shows the title, the priority and the status.
 
-- [ ] Priority queue list with filters
-- [ ] Complaint page with the category, priority and suggested reply
-- [ ] Edit and send a reply
-- [ ] Mark a complaint Resolved
+![Priority queue](images/11-agent-queue.png)
 
-Add the step-by-step instructions and screenshots here when these screens are ready.
+Select a complaint to open it.
+
+### 3. Review, edit and send a reply
+
+The complaint page shows the customer's text, the order reference and the automatic analysis (the sentiment, and the category and priority the system chose). The reply box is filled with a suggested reply.
+
+1. Read the complaint and the suggested reply.
+2. If the **Category** or **Priority** is wrong, change it. The system keeps the original values and marks the complaint as corrected.
+3. Edit the **Reply to customer** so it fits the complaint. The suggested reply is only a draft and is never sent without you.
+4. Select **Send reply & resolve**.
+
+   ![Review and reply](images/12-agent-complaint.png)
+
+The complaint is marked Resolved and you return to the queue, which shows "Reply sent and complaint resolved". The customer sees your reply on their complaint page.
+
+![Reply sent](images/13-reply-sent.png)
+
+Good to know:
+
+- If the analysis service was down when the complaint arrived, the page says "AI analysis is still pending". Read the complaint and write the reply yourself.
+- The reply must be 1 to 2000 characters.
+- A complaint that is already Resolved cannot be replied to again.
+- Do not promise a refund or an outcome you cannot guarantee.
 
 ## Getting help
 
-If something does not work, note what you did and what you saw, and report it to the project team. See [CONTRIBUTING.md](../CONTRIBUTING.md) for how the team tracks problems.
+If a word is unclear, see the [glossary and FAQ](glossary-faq.md). If something does not work, note what you did and what you saw, and report it to the project team. See [CONTRIBUTING.md](../CONTRIBUTING.md) for how the team tracks problems.
