@@ -62,7 +62,7 @@ async function loginUser({ email, password }) {
     const updated = await User.findOneAndUpdate(
       { _id: user._id },
       { $inc: { failedLogins: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     );
     if (updated.failedLogins >= MAX_FAILED_LOGINS) {
       await User.updateOne(
