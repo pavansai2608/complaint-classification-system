@@ -1,0 +1,67 @@
+text,expected_category,expected_sentiment,expected_priority
+I see charges on my card that I never made. This looks like fraud and I want it investigated today.,billing,negative,Urgent
+You charged me twice and refused my refund. I will contact my lawyer if this is not fixed this week.,billing,negative,Urgent
+My refund was promised 30 days ago and I still have not received it. This is unacceptable!,billing,negative,Urgent
+WHY was I charged twice for the same order?! Fix this now.,billing,negative,High
+The amount on my invoice is much higher than the price shown at checkout. I am very upset.,billing,negative,High
+I cancelled my subscription last month and you still took money from my account.,billing,negative,High
+"Your late fee is ridiculous, I paid on time and I am furious about this charge.",billing,negative,High
+I was billed for a premium plan I never signed up for.,billing,negative,High
+This is the third time I ask you to correct my bill and nothing happens. Terrible service.,billing,negative,High
+The billing period on my latest invoice looks wrong. Can someone check it?,billing,neutral,Medium
+My invoice shows a tax amount I do not understand. Please explain it.,billing,neutral,Medium
+I was charged a small fee that was not on my invoice last month.,billing,negative,Medium
+"The discount code did not apply to my bill, so I paid the full price.",billing,negative,Medium
+My receipt has the wrong company name on it. I need a corrected one.,billing,neutral,Medium
+Where can I download my invoices for last year?,billing,neutral,Low
+Can you tell me when the next payment on my plan will be taken?,billing,neutral,Low
+Do you accept payment by bank transfer as well as by card?,billing,neutral,Low
+I would like to change the email address that receives my invoices.,billing,neutral,Low
+"Thank you for fixing my bill so quickly, the refund has arrived.",billing,positive,Low
+The new invoice layout is much clearer. Great job.,billing,positive,Low
+Support corrected my double charge in one day. I am very happy with the service.,billing,positive,Low
+"Everything on my latest bill is correct now, thanks for your help.",billing,positive,Low
+"My package was marked as delivered but it never arrived, and it contained medicine I need this week.",delivery,negative,Urgent
+The refund for my lost parcel has still not been received after six weeks. I am considering legal action.,delivery,negative,Urgent
+Someone else received my order using my name and address. I think this may be fraud.,delivery,negative,Urgent
+My order is two weeks late and nobody answers my messages! This is outrageous.,delivery,negative,High
+The courier left my package outside in the rain and everything inside is ruined.,delivery,negative,High
+You delivered to the wrong address again. I am so tired of this.,delivery,negative,High
+The tracking has not moved for ten days and my parcel is lost.,delivery,negative,High
+I paid for express delivery but it took a week. I want the delivery fee back.,delivery,negative,High
+The driver was rude and threw the box over my fence. Terrible!,delivery,negative,High
+My order was supposed to arrive on Monday but the tracking page now says Thursday.,delivery,negative,Medium
+Only two of the three boxes in my order were delivered.,delivery,negative,Medium
+The delivery slot I chose was not respected and I had to wait all day.,delivery,negative,Medium
+The tracking link in my email does not open.,delivery,neutral,Medium
+I need to change the delivery address for an order that has not shipped yet.,delivery,neutral,Medium
+How long does standard delivery usually take to my area?,delivery,neutral,Low
+Can I pick up my parcel from a local collection point instead?,delivery,neutral,Low
+Do you deliver on Saturdays?,delivery,neutral,Low
+Please tell me how to arrange a redelivery for tomorrow afternoon.,delivery,neutral,Low
+My parcel arrived a day early and was packed very well. Thank you!,delivery,positive,Low
+The courier called ahead and was very polite. Great delivery experience.,delivery,positive,Low
+"Fast shipping, my order came in two days. I am very pleased.",delivery,positive,Low
+"Thanks for sorting out the redelivery so quickly, it arrived this morning.",delivery,positive,Low
+The battery on my device overheated and started smoking. This is dangerous and I stopped using it immediately.,product,negative,Urgent
+The charger sparked when I plugged it in. Someone could get hurt. I want this recalled.,product,negative,Urgent
+I was sold a fake item and I want my money back. I will report this to the authorities if you ignore me.,product,negative,Urgent
+The screen arrived cracked and I paid a lot for it. This is unacceptable!,product,negative,High
+My new blender stopped working after two days. What a waste of money!,product,negative,High
+The product looks nothing like the pictures on your website. I feel cheated.,product,negative,High
+Both headphones I got are defective. I am extremely disappointed.,product,negative,High
+The item stopped working after the update and your support keeps ignoring me.,product,negative,High
+I received a used product that was sold to me as new. This is awful.,product,negative,High
+The jacket I ordered is a size smaller than the label says.,product,negative,Medium
+A screw and the manual were missing from the box.,product,negative,Medium
+The colour of the lamp is slightly different from the photo.,product,negative,Medium
+The instructions for setting up the router are unclear. Can you send a better guide?,product,neutral,Medium
+The zipper on my bag is stiff and sometimes gets stuck.,product,negative,Medium
+Does this vacuum cleaner come with a spare filter?,product,neutral,Low
+What is the warranty period for the kettle?,product,neutral,Low
+Is the desk available in black?,product,neutral,Low
+Which cable do I need to connect the monitor to my laptop?,product,neutral,Low
+I love my new water bottle. It keeps drinks cold all day.,product,positive,Low
+The keyboard is comfortable and works perfectly. Thanks!,product,positive,Low
+The replacement item you sent works great. Thank you for the quick help.,product,positive,Low
+Excellent quality for the price. I would buy it again.,product,positive,Low
