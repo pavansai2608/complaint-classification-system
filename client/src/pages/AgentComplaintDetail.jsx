@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import apiClient from '../api/client'
+import StatusBadge from '../components/StatusBadge'
 
 const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent']
-
-function statusClass(status) {
-  return `complaint-status complaint-status-${(status || 'open').toLowerCase().replace(/\s+/g, '-')}`
-}
 
 function AgentComplaintDetail() {
   const { id } = useParams()
@@ -103,7 +100,7 @@ function AgentComplaintDetail() {
         {complaint && (
           <>
             <h1>{complaint.title}</h1>
-            <p className={statusClass(complaint.status)}>{complaint.status}</p>
+            <StatusBadge status={complaint.status} />
             <p className="lede">{complaint.description}</p>
             {complaint.orderReference && <p className="lede">Order reference: {complaint.orderReference}</p>}
 

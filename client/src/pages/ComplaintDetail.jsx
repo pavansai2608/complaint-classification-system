@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import apiClient from '../api/client'
-
-function statusClass(status) {
-  return `complaint-status complaint-status-${status.toLowerCase().replace(/\s+/g, '-')}`
-}
+import StatusBadge from '../components/StatusBadge'
 
 function ComplaintDetail() {
   const { id } = useParams()
@@ -62,7 +59,7 @@ function ComplaintDetail() {
         {complaint && (
           <>
             <h1>{complaint.title}</h1>
-            <p className={statusClass(complaint.status)}>{complaint.status}</p>
+            <StatusBadge status={complaint.status} />
             <p className="lede">{complaint.description}</p>
             {complaint.orderReference && (
               <p className="lede">Order reference: {complaint.orderReference}</p>

@@ -662,6 +662,11 @@
   color: #a7f3d0;
 }
 
+.complaint-status-unknown {
+  background: rgba(148, 163, 184, 0.24);
+  color: #e2e8f0;
+}
+
 .complaint-card-badges {
   display: flex;
   align-items: center;
@@ -695,6 +700,11 @@
 }
 
 .priority-badge-low {
+  background: rgba(148, 163, 184, 0.24);
+  color: #e2e8f0;
+}
+
+.priority-badge-unknown {
   background: rgba(148, 163, 184, 0.24);
   color: #e2e8f0;
 }

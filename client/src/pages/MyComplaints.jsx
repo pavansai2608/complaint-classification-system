@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../api/client'
+import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
-
-function statusClass(status) {
-  return `complaint-status complaint-status-${status.toLowerCase().replace(/\s+/g, '-')}`
-}
 
 function MyComplaints() {
   const [complaints, setComplaints] = useState([])
@@ -70,7 +67,7 @@ function MyComplaints() {
               <li key={complaint._id || complaint.id}>
                 <Link to={`/complaints/${complaint._id || complaint.id}`} className="complaint-card">
                   <span className="complaint-card-title">{complaint.title}</span>
-                  <span className={statusClass(complaint.status)}>{complaint.status}</span>
+                  <StatusBadge status={complaint.status} />
                 </Link>
               </li>
             ))}

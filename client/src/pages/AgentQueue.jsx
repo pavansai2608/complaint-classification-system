@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import apiClient from '../api/client'
+import PriorityBadge from '../components/PriorityBadge'
+import StatusBadge from '../components/StatusBadge'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
-
-function statusClass(status) {
-  return `complaint-status complaint-status-${(status || 'open').toLowerCase().replace(/\s+/g, '-')}`
-}
-
-// Complaints saved before the priority field existed have no value here -
-// treat them as Medium rather than crashing on .toLowerCase().
-function priorityClass(priority) {
-  return `priority-badge priority-badge-${(priority || 'medium').toLowerCase()}`
-}
 
 function AgentQueue() {
   const location = useLocation()
@@ -82,8 +74,8 @@ function AgentQueue() {
                 <Link to={`/agent/complaints/${item._id}`} className="complaint-card">
                   <span className="complaint-card-title">{item.title}</span>
                   <span className="complaint-card-badges">
-                    <span className={priorityClass(item.priority)}>{item.priority || 'Medium'}</span>
-                    <span className={statusClass(item.status)}>{item.status || 'Open'}</span>
+                    <PriorityBadge priority={item.priority} />
+                    <StatusBadge status={item.status} />
                   </span>
                 </Link>
               </li>
