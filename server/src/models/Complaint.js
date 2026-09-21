@@ -7,6 +7,18 @@ const complaintSchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true, minlength: 10, maxlength: 2000 },
     orderReference: { type: String, trim: true, maxlength: 60, default: null },
     status: { type: String, enum: ['Open', 'In Progress', 'Resolved'], default: 'Open' },
+    category: { type: String, default: null },
+    confidence: { type: Number, default: null },
+    needsReview: { type: Boolean, default: false },
+    emotion: {
+      label: { type: String, default: null },
+      score: { type: Number, default: null },
+    },
+    priority: { type: String, enum: ['Low', 'Medium', 'High', 'Urgent'], default: 'Medium' },
+    suggestedReply: { type: String, default: null },
+    // True when the AI service was unreachable at submit time - the complaint
+    // is saved anyway with a safe default priority, and this flags it for retry.
+    analysisPending: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
