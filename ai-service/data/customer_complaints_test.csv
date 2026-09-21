@@ -1,0 +1,212 @@
+text,label
+Billing period is wrong  ,billing
+I only selected one product.  ,billing
+The stitching is already coming apart  ,product
+You charged me in the wrong currency  ,billing
+I just want my package—why is that hard?  ,delivery
+The display is super dim  ,product
+Broke during first use  ,product
+I called already—this should’ve been resolved.  ,billing
+Paint bubbles forming  ,product
+My groceries were left in the sun  ,delivery
+I never finished creating the account.  ,billing
+"Said “premium,” but feels dollar store  ",product
+The tag says a completely different brand  ,product
+Why is the amount different every month?  ,billing
+Handle was taped on  ,product
+"I requested a signature, none was taken  ",delivery
+You keep blaming the carrier but do nothing  ,delivery
+Way smaller than the pictures  ,product
+There are dents all over the product  ,product
+Won’t hold suction  ,product
+Where is my replacement? Still nothing  ,delivery
+My package is stuck in transit with no update  ,delivery
+You can't even get the basics right  ,delivery
+Product melted when plugged in  ,product
+The wrong item was billed  ,billing
+The delivery window keeps changing  ,delivery
+The auto-renewal charged me before I could cancel.  ,billing
+"Your platform doesn’t show any charges, yet I was billed  ",billing
+They delivered to an old address  ,delivery
+There’s mold growing inside the container  ,product
+I waited all day and got nothing  ,delivery
+Handle snapped off  ,product
+Screen protector was shattered  ,product
+Device keeps shutting off  ,product
+There’s no transparency in your billing  ,billing
+Driver marked it delivered without even arriving  ,delivery
+Why was the box left in the pouring rain?  ,delivery
+They left it on the sidewalk  ,delivery
+They marked it delivered—no package here  ,delivery
+That’s not what your ad said  ,billing
+You charged the wrong user ID.  ,billing
+I paid extra for fast shipping and it’s late  ,delivery
+It’s been weeks and no fix  ,billing
+You can’t mark something delivered without actually delivering it  ,delivery
+It’s smaller than described  ,product
+The photo proof isn’t even my house  ,delivery
+Horrible buzzing noise  ,product
+Package arrived weeks late with no explanation  ,product
+I’m sick of chasing your team  ,billing
+My package was stolen after you left it outside  ,delivery
+I didn’t authorize any payment today.  ,billing
+This total keeps changing.  ,billing
+No explanation for this delay  ,delivery
+"Still waiting, still nothing  ",delivery
+Someone else signed for my package  ,delivery
+This delay cost me money  ,delivery
+Why can’t you get it right the first time?  ,billing
+"Nobody knocked, just dumped it outside  ",delivery
+Where’s the billing correction note?  ,billing
+The display is dim  ,product
+Every bill has a new surprise.  ,billing
+Your courier threw the package over the fence  ,delivery
+Color started fading after a day  ,product
+I only clicked once—how’d I get charged twice?  ,billing
+Came with hair and dirt on it  ,product
+I never got what I paid for  ,delivery
+I don’t even use this anymore  ,billing
+Tracking hasn’t updated in 3 days  ,delivery
+You billed me for an inactive product.  ,billing
+They keep missing my unit  ,delivery
+This payment hit my account twice.  ,billing
+I needed that today—not next week  ,delivery
+You shipped me an old model  ,product
+Tracking makes no sense at all  ,delivery
+Vents are jammed  ,product
+"No proof, no call, no package  ",delivery
+Left at neighbor’s by mistake again  ,delivery
+Nothing works like the ad showed  ,product
+Everything inside was broken  ,delivery
+The app didn’t show this charge  ,billing
+Takes forever to charge  ,product
+This is not even close to on time  ,delivery
+My order has been delayed multiple times without notice  ,delivery
+This price doesn’t match the ad.  ,billing
+I waited outside and still missed the delivery  ,delivery
+Plastic looks burned  ,product
+I thought I was on a different plan  ,billing
+Even your agent agreed this was an error.  ,billing
+Smells like mold and chemicals  ,product
+Battery dies in minutes  ,product
+Nothing matches what I ordered  ,delivery
+Leaking fluid out of the box  ,product
+The item is defective  ,product
+"Late again, every single time  ",delivery
+This should’ve been paused last month  ,billing
+Instructions are in the wrong language  ,product
+Plastic parts keep snapping off  ,product
+The driver was rude and unprofessional  ,delivery
+My billing address is wrong again  ,billing
+Totally defective out of the box  ,product
+The delivery person argued with me  ,delivery
+You never sent a notice  ,billing
+Your sizing chart is totally wrong  ,product
+Totally different than what’s pictured  ,product
+Doesn’t recognize my fingerprint  ,product
+Entire device gets hot  ,product
+They delivered to the wrong apartment  ,delivery
+My discount code didn’t apply like it should have.  ,billing
+This is not what I paid for  ,delivery
+You said this issue was resolved  ,billing
+No way to return it  ,product
+Nothing adds up here  ,billing
+Your system charged me incorrectly  ,billing
+I was charged for delivery that never came  ,delivery
+Tracking says delivered yesterday—no sign of it  ,delivery
+Unit won’t charge at all  ,product
+There’s a gap in my billing history.  ,billing
+I received the wrong size  ,product
+This is not what I ordered  ,delivery
+Still waiting on a refund from last month  ,billing
+It broke within the first hour  ,product
+Billing shouldn’t be this confusing  ,billing
+Buttons are mislabeled and confusing  ,product
+App crashes constantly  ,product
+Glue stains everywhere  ,product
+The software won’t install  ,product
+This isn't what I signed up for.  ,billing
+My name is not even on the label  ,delivery
+Still waiting for the correction you promised  ,billing
+How did my bill triple overnight?  ,billing
+I paid extra for express and it’s late  ,delivery
+No one ever came  ,delivery
+No way I’m paying this nonsense  ,billing
+Your billing is impossible to follow.  ,billing
+You left my expensive item in plain sight  ,delivery
+The discount never applied  ,billing
+Clips won’t lock  ,product
+Left my box by a trash can  ,delivery
+Please fix this error  ,billing
+What happened to my next-day delivery?  ,delivery
+Paint smudges on the edges  ,product
+It’s been rescheduled four times  ,delivery
+You sent me the display model  ,product
+I didn’t buy anything recently.  ,billing
+The metal is rusted  ,product
+The box looks like it was chewed on  ,delivery
+The strap tore off instantly  ,product
+I’m losing patience here  ,billing
+They left it with a neighbor without asking  ,delivery
+Completely fell apart in my hands  ,product
+I got someone else's name on my box  ,delivery
+Paint rubs off on hands  ,product
+Only half of it works  ,product
+Missing the user manual  ,product
+You never updated me with a new ETA  ,delivery
+The invoice is all wrong  ,billing
+Buttons are mislabeled  ,product
+I found my package in the trash area  ,delivery
+You never notified me it was arriving  ,delivery
+I’ve emailed multiple times. Still no fix.  ,billing
+No English option available  ,product
+They delivered the wrong size  ,delivery
+The box was completely crushed when it arrived  ,product
+You misled me on the pricing  ,billing
+There’s no record of this on my dashboard  ,billing
+I opted out of this charge  ,billing
+Why does this charge appear before the billing cycle?  ,billing
+That fee wasn’t mentioned anywhere.  ,billing
+Support asked me to “wait and see”  ,product
+Food was delivered in horrible condition  ,delivery
+The product looks cheap and fake  ,product
+I specifically asked for a different model  ,product
+No heads-up before this deduction  ,billing
+I found bugs inside the packaging  ,product
+This does not work according to the website  ,product
+It smells like someone’s cologne  ,product
+The charge doesn’t align with the usage.  ,billing
+You sent me an empty box  ,product
+I shouldn’t have to keep asking  ,billing
+I expected better from this brand  ,product
+Why does this keep happening?  ,billing
+These extra charges are absurd  ,billing
+There’s no way this was delivered  ,delivery
+Paint is chipped and scratched  ,product
+"No confirmation, but you still charged me  ",billing
+Package looked like it was run over  ,delivery
+This isn’t the agreed package  ,billing
+How is this so difficult?  ,delivery
+You promised today—where is it?  ,delivery
+This was extremely disappointing  ,product
+Doesn’t sit flat  ,product
+I just want what I paid for  ,billing
+Still missing the rest of my order  ,delivery
+This total makes no sense  ,billing
+I was told I wouldn’t be charged yet  ,billing
+Why did they leave it at the back door?  ,delivery
+Fan wobbles when spinning  ,product
+Screen scratched under plastic  ,product
+I was told that trial was completely free.  ,billing
+I see a duplicate charge for the same order.  ,billing
+Food arrived frozen instead of fresh  ,delivery
+I feel scammed right now  ,product
+"Looks refurbished, not new  ",product
+USB port doesn’t function  ,product
+My account is locked and I still got billed.  ,billing
+Sensor doesn’t detect movement  ,product
+You delivered to an address I never gave  ,delivery
+You didn’t even bother notifying me  ,delivery
+Billing support is ignoring me  ,billing
+Item was already expired  ,product
+The lid won’t close  ,product
