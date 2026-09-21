@@ -25,7 +25,6 @@ function renderAsRole(role) {
           <Route element={<ProtectedRoute />}>
             <Route path="/agent" element={<RoleHome />} />
             <Route path="/customer" element={<RoleHome />} />
-            <Route path="/admin" element={<RoleHome />} />
           </Route>
         </Routes>
       </AuthProvider>
@@ -41,7 +40,6 @@ describe('RoleHome', () => {
   it.each([
     ['customer', 'Your complaints'],
     ['agent', 'Priority queue'],
-    ['admin', 'Admin dashboard'],
   ])('shows %s-specific content and the logged-in user', async (role, heading) => {
     renderAsRole(role)
 

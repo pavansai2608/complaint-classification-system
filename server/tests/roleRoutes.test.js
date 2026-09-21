@@ -39,7 +39,7 @@ describe('role-protected routes', () => {
     expect(res.status).toBe(401);
   });
 
-  it.each(['customer', 'agent', 'admin'])('lets a logged-in %s read their own profile', async (role) => {
+  it.each(['customer', 'agent'])('lets a logged-in %s read their own profile', async (role) => {
     getCurrentUser.mockResolvedValueOnce({ id: `${role}-id`, name: 'Test', role });
 
     const res = await request(app).get('/api/users/me').set('Authorization', `Bearer ${tokenFor(role)}`);
@@ -64,19 +64,6 @@ describe('role-protected routes', () => {
     const res = await request(app).get('/api/agent/queue').set('Authorization', `Bearer ${tokenFor('agent')}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ items: [] });
-  });
-
-  it('blocks an agent from /api/admin/summary', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
-    const res = await request(app).get('/api/admin/summary').set('Authorization', `Bearer ${tokenFor('agent')}`);
-    expect(res.status).toBe(403);
-  });
-
-  it('lets an admin read /api/admin/summary', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
-    const res = await request(app).get('/api/admin/summary').set('Authorization', `Bearer ${tokenFor('admin')}`);
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ totalComplaints: 0, openComplaints: 0, resolvedComplaints: 0 });
   });
 
   it('rejects a valid token once the account behind it has been deactivated', async () => {

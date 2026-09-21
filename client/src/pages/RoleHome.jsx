@@ -10,10 +10,6 @@ const ROLE_CONTENT = {
     title: 'Priority queue',
     lede: 'Review complaints sorted by priority, check the AI analysis, and send replies.',
   },
-  admin: {
-    title: 'Admin dashboard',
-    lede: 'See complaint trends across the team and manage user accounts and roles.',
-  },
 }
 
 function RoleHome() {

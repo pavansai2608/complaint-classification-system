@@ -32,9 +32,6 @@ function AppRoutes() {
           <Route element={<RoleRoute allow={['agent']} />}>
             <Route path="/agent" element={<RoleHome />} />
           </Route>
-          <Route element={<RoleRoute allow={['admin']} />}>
-            <Route path="/admin" element={<RoleHome />} />
-          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

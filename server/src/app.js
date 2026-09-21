@@ -9,7 +9,6 @@ const { requireRole } = require('./middleware/requireRole');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const agentRoutes = require('./routes/agentRoutes');
-const adminRoutes = require('./routes/adminRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 
 function createApp({ clientOrigin }) {
@@ -34,7 +33,6 @@ function createApp({ clientOrigin }) {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', authenticate, userRoutes);
   app.use('/api/agent', authenticate, requireRole('agent'), agentRoutes);
-  app.use('/api/admin', authenticate, requireRole('admin'), adminRoutes);
   app.use('/api/complaints', authenticate, requireRole('customer'), complaintRoutes);
 
   app.use((req, res) => {
