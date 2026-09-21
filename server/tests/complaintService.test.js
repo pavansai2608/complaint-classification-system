@@ -3,12 +3,28 @@ jest.mock('../src/models/Complaint', () => ({
   aggregate: jest.fn(),
   countDocuments: jest.fn(),
   findByIdAndUpdate: jest.fn(),
+  findById: jest.fn(),
 }));
 jest.mock('../src/services/aiService', () => ({ analyzeComplaint: jest.fn() }));
 
 const Complaint = require('../src/models/Complaint');
 const { analyzeComplaint } = require('../src/services/aiService');
-const { createComplaint, getAgentQueue, updateComplaintStatus } = require('../src/services/complaintService');
+const {
+  createComplaint,
+  getAgentQueue,
+  updateComplaintStatus,
+  sendComplaintReply,
+  getComplaintById,
+} = require('../src/services/complaintService');
+
+// A minimal stand-in for a mongoose document: plain fields plus a save()
+// that resolves to the same (now-mutated) object, mirroring how
+// sendComplaintReply mutates the document in place before saving.
+function fakeComplaintDoc(fields) {
+  const doc = { wasCorrected: false, ...fields };
+  doc.save = jest.fn().mockResolvedValue(doc);
+  return doc;
+}
 
 const baseInput = {
   customerId: 'customer-id',
@@ -172,5 +188,88 @@ describe('updateComplaintStatus', () => {
     const result = await updateComplaintStatus('missing-id', 'Resolved', 'agent-1');
 
     expect(result).toBeNull();
+  });
+});
+
+describe('sendComplaintReply', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('saves the reply, resolves the complaint, and records who and when', async () => {
+    const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
+    Complaint.findById.mockResolvedValueOnce(doc);
+
+    const result = await sendComplaintReply('complaint-1', { reply: 'We refunded the charge.' }, 'agent-1');
+
+    expect(result.agentReply).toBe('We refunded the charge.');
+    expect(result.repliedBy).toBe('agent-1');
+    expect(result.repliedAt).toBeInstanceOf(Date);
+    expect(result.status).toBe('Resolved');
+    expect(result.statusUpdatedBy).toBe('agent-1');
+    expect(doc.save).toHaveBeenCalled();
+  });
+
+  it('leaves wasCorrected false when the agent sends the AI category and priority unchanged', async () => {
+    const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
+    Complaint.findById.mockResolvedValueOnce(doc);
+
+    const result = await sendComplaintReply(
+      'complaint-1',
+      { reply: 'Thanks for your patience.', category: 'billing', priority: 'Medium' },
+      'agent-1',
+    );
+
+    expect(result.wasCorrected).toBe(false);
+    expect(result.originalCategory).toBeUndefined();
+  });
+
+  it('flags wasCorrected and records the original values when the agent overrides the category', async () => {
+    const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
+    Complaint.findById.mockResolvedValueOnce(doc);
+
+    const result = await sendComplaintReply(
+      'complaint-1',
+      { reply: 'Correcting the category.', category: 'delivery' },
+      'agent-1',
+    );
+
+    expect(result.wasCorrected).toBe(true);
+    expect(result.originalCategory).toBe('billing');
+    expect(result.category).toBe('delivery');
+  });
+
+  it('flags wasCorrected and records the original value when the agent overrides the priority', async () => {
+    const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
+    Complaint.findById.mockResolvedValueOnce(doc);
+
+    const result = await sendComplaintReply(
+      'complaint-1',
+      { reply: 'Bumping the priority.', priority: 'Urgent' },
+      'agent-1',
+    );
+
+    expect(result.wasCorrected).toBe(true);
+    expect(result.originalPriority).toBe('Medium');
+    expect(result.priority).toBe('Urgent');
+  });
+
+  it('returns null when the complaint does not exist', async () => {
+    Complaint.findById.mockResolvedValueOnce(null);
+
+    const result = await sendComplaintReply('missing-id', { reply: 'Hi' }, 'agent-1');
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('getComplaintById', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('looks up a complaint by id with no ownership filter', async () => {
+    Complaint.findById.mockResolvedValueOnce({ id: 'complaint-1' });
+
+    const result = await getComplaintById('complaint-1');
+
+    expect(result).toEqual({ id: 'complaint-1' });
+    expect(Complaint.findById).toHaveBeenCalledWith('complaint-1');
   });
 });

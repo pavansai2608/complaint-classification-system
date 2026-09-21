@@ -45,6 +45,43 @@ describe('ComplaintDetail', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/api/complaints/507f1f77bcf86cd799439011')
   })
 
+  it('shows the agent reply once one has been sent', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      data: {
+        complaint: {
+          id: '507f1f77bcf86cd799439011',
+          title: 'Order arrived damaged',
+          description: 'The package arrived with a cracked screen.',
+          status: 'Resolved',
+          agentReply: 'We refunded the charge in full.',
+        },
+      },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('We refunded the charge in full.')).toBeInTheDocument()
+    expect(screen.getByText('Reply from support')).toBeInTheDocument()
+  })
+
+  it('does not show a reply section when no reply has been sent yet', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      data: {
+        complaint: {
+          id: '507f1f77bcf86cd799439011',
+          title: 'Order arrived damaged',
+          description: 'The package arrived with a cracked screen.',
+          status: 'Open',
+        },
+      },
+    })
+
+    renderPage()
+
+    await screen.findByText('Order arrived damaged')
+    expect(screen.queryByText('Reply from support')).not.toBeInTheDocument()
+  })
+
   it('shows a not-found message for a complaint that is missing or not owned by the customer', async () => {
     const err = new Error('not found')
     err.response = { status: 404 }

@@ -254,7 +254,8 @@
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   padding: 11px var(--space-3);
   border: 1px solid rgba(15, 23, 42, 0.12);
@@ -275,7 +276,8 @@
 }
 
 .field input:focus-visible,
-.field textarea:focus-visible {
+.field textarea:focus-visible,
+.field select:focus-visible {
   outline: none;
   border-color: var(--color-ring);
   background: rgba(255, 255, 255, 0.95);
@@ -658,4 +660,71 @@
 .complaint-status-resolved {
   background: rgba(52, 211, 153, 0.24);
   color: #a7f3d0;
+}
+
+.complaint-card-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px var(--space-3);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.priority-badge-urgent {
+  background: rgba(248, 113, 113, 0.24);
+  color: #fecaca;
+}
+
+.priority-badge-high {
+  background: rgba(251, 146, 60, 0.24);
+  color: #fed7aa;
+}
+
+.priority-badge-medium {
+  background: rgba(251, 191, 36, 0.24);
+  color: #fde68a;
+}
+
+.priority-badge-low {
+  background: rgba(148, 163, 184, 0.24);
+  color: #e2e8f0;
+}
+
+.ai-analysis {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ai-analysis p {
+  margin: 0 0 var(--space-2);
+}
+
+.ai-analysis p:last-child {
+  margin-bottom: 0;
+}
+
+.agent-reply {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.agent-reply h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.0625rem;
 }

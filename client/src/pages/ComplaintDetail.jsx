@@ -67,6 +67,12 @@ function ComplaintDetail() {
             {complaint.orderReference && (
               <p className="lede">Order reference: {complaint.orderReference}</p>
             )}
+            {complaint.agentReply && (
+              <div className="agent-reply">
+                <h2>Reply from support</h2>
+                <p className="lede">{complaint.agentReply}</p>
+              </div>
+            )}
           </>
         )}
 

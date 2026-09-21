@@ -1,6 +1,7 @@
 const { body, param, query } = require('express-validator');
 
 const VALID_STATUSES = ['Open', 'In Progress', 'Resolved'];
+const VALID_PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'];
 
 // FR: title 5-120 chars, description 10-2000 chars, order reference optional
 // but capped so it can't be used to smuggle in an oversized value.
@@ -24,6 +25,15 @@ const updateStatusValidator = [
   body('status').isIn(VALID_STATUSES).withMessage('Invalid status value'),
 ];
 
+// The agent can send the reply as-is or correct the AI's category/priority
+// first - both overrides are optional and only change something if sent.
+const replyValidator = [
+  param('id').isMongoId().withMessage('Invalid complaint id'),
+  body('reply').trim().isLength({ min: 1, max: 2000 }).withMessage('Reply must be 1 to 2000 characters'),
+  body('category').optional({ values: 'falsy' }).trim().isLength({ max: 60 }).withMessage('Invalid category'),
+  body('priority').optional({ values: 'falsy' }).isIn(VALID_PRIORITIES).withMessage('Invalid priority value'),
+];
+
 const getQueueValidator = [
   query('status').optional().isIn(VALID_STATUSES).withMessage('Invalid status filter'),
   query('category').optional().trim().isLength({ max: 60 }).withMessage('Invalid category filter'),
@@ -39,5 +49,6 @@ module.exports = {
   createComplaintValidator,
   getComplaintValidator,
   updateStatusValidator,
+  replyValidator,
   getQueueValidator,
 };
