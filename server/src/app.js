@@ -33,7 +33,9 @@ function createApp({ clientOrigin }) {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', authenticate, userRoutes);
   app.use('/api/agent', authenticate, requireRole('agent'), agentRoutes);
-  app.use('/api/complaints', authenticate, requireRole('customer'), complaintRoutes);
+  // Role is checked per-route inside complaintRoutes: customers submit and
+  // read their own complaints, agents update status - both live under /api/complaints.
+  app.use('/api/complaints', authenticate, complaintRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Not found' } });

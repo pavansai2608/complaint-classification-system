@@ -43,6 +43,17 @@ async function getComplaintForCustomer(complaintId, customerId) {
   return Complaint.findOne({ _id: complaintId, customer: customerId });
 }
 
+// Returns null if the complaint doesn't exist, so the controller can 404
+// without an agent being able to tell "missing" from "not yours to see" -
+// agents can act on any complaint, so there's no ownership check here.
+async function updateComplaintStatus(complaintId, status, agentId) {
+  return Complaint.findByIdAndUpdate(
+    complaintId,
+    { status, statusUpdatedBy: agentId, statusUpdatedAt: new Date() },
+    { new: true },
+  );
+}
+
 // Priority is stored as a string enum, so it can't be sorted alphabetically -
 // this fixed list gives each value a rank (0 = highest) for the sort below.
 const PRIORITY_ORDER = ['Urgent', 'High', 'Medium', 'Low'];
@@ -89,5 +100,6 @@ module.exports = {
   createComplaint,
   listComplaintsForCustomer,
   getComplaintForCustomer,
+  updateComplaintStatus,
   getAgentQueue,
 };

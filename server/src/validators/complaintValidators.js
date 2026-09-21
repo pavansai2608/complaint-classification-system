@@ -19,6 +19,11 @@ const createComplaintValidator = [
 
 const getComplaintValidator = [param('id').isMongoId().withMessage('Invalid complaint id')];
 
+const updateStatusValidator = [
+  param('id').isMongoId().withMessage('Invalid complaint id'),
+  body('status').isIn(VALID_STATUSES).withMessage('Invalid status value'),
+];
+
 const getQueueValidator = [
   query('status').optional().isIn(VALID_STATUSES).withMessage('Invalid status filter'),
   query('category').optional().trim().isLength({ max: 60 }).withMessage('Invalid category filter'),
@@ -30,4 +35,9 @@ const getQueueValidator = [
     .toInt(),
 ];
 
-module.exports = { createComplaintValidator, getComplaintValidator, getQueueValidator };
+module.exports = {
+  createComplaintValidator,
+  getComplaintValidator,
+  updateStatusValidator,
+  getQueueValidator,
+};

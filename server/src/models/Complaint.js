@@ -19,6 +19,8 @@ const complaintSchema = new mongoose.Schema(
     // True when the AI service was unreachable at submit time - the complaint
     // is saved anyway with a safe default priority, and this flags it for retry.
     analysisPending: { type: Boolean, default: false },
+    statusUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    statusUpdatedAt: { type: Date, default: null },
   },
   { timestamps: true },
 );

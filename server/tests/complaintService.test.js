@@ -2,12 +2,13 @@ jest.mock('../src/models/Complaint', () => ({
   create: jest.fn(),
   aggregate: jest.fn(),
   countDocuments: jest.fn(),
+  findByIdAndUpdate: jest.fn(),
 }));
 jest.mock('../src/services/aiService', () => ({ analyzeComplaint: jest.fn() }));
 
 const Complaint = require('../src/models/Complaint');
 const { analyzeComplaint } = require('../src/services/aiService');
-const { createComplaint, getAgentQueue } = require('../src/services/complaintService');
+const { createComplaint, getAgentQueue, updateComplaintStatus } = require('../src/services/complaintService');
 
 const baseInput = {
   customerId: 'customer-id',
@@ -143,5 +144,33 @@ describe('getAgentQueue', () => {
     const limitStage = pipeline.find((stage) => stage.$limit !== undefined);
     expect(skipStage.$skip).toBe(20);
     expect(limitStage.$limit).toBe(10);
+  });
+});
+
+describe('updateComplaintStatus', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('records who changed the status and when', async () => {
+    Complaint.findByIdAndUpdate.mockResolvedValueOnce({ id: 'complaint-1', status: 'Resolved' });
+
+    await updateComplaintStatus('complaint-1', 'Resolved', 'agent-1');
+
+    expect(Complaint.findByIdAndUpdate).toHaveBeenCalledWith(
+      'complaint-1',
+      expect.objectContaining({
+        status: 'Resolved',
+        statusUpdatedBy: 'agent-1',
+        statusUpdatedAt: expect.any(Date),
+      }),
+      { new: true },
+    );
+  });
+
+  it('returns null when the complaint does not exist', async () => {
+    Complaint.findByIdAndUpdate.mockResolvedValueOnce(null);
+
+    const result = await updateComplaintStatus('missing-id', 'Resolved', 'agent-1');
+
+    expect(result).toBeNull();
   });
 });
