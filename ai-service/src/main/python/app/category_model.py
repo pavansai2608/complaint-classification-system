@@ -18,6 +18,17 @@ def load_model():
     return joblib.load(_model_path())
 
 
-def predict_category(text: str) -> str:
+def predict_category_with_confidence(text: str) -> tuple:
+    """Returns (category, confidence) - confidence is the model's own
+    probability for the category it picked, so a caller can tell a
+    confident guess from a shaky one.
+    """
     model = load_model()
-    return model.predict([text])[0]
+    probabilities = model.predict_proba([text])[0]
+    best_index = probabilities.argmax()
+    return model.classes_[best_index], float(probabilities[best_index])
+
+
+def predict_category(text: str) -> str:
+    category, _ = predict_category_with_confidence(text)
+    return category
