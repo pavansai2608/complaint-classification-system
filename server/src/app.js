@@ -6,6 +6,8 @@ const { isConnected } = require('./config/db');
 const { ApiError } = require('./utils/ApiError');
 const { authenticate } = require('./middleware/authenticate');
 const { requireRole } = require('./middleware/requireRole');
+const { sanitizeBody } = require('./middleware/sanitizeBody');
+const { apiRateLimiter } = require('./middleware/apiRateLimiter');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const agentRoutes = require('./routes/agentRoutes');
@@ -25,6 +27,14 @@ function createApp({ clientOrigin }) {
 
   // Reads the httpOnly refresh-token cookie on /api/auth/refresh
   app.use(cookieParser());
+
+  // Strips any MongoDB operator key (starts with '$' or contains '.') out
+  // of the request body before it can reach a query.
+  app.use(sanitizeBody);
+
+  // General backstop rate limit on top of the stricter per-route ones
+  // (login, register) - keyed per IP.
+  app.use('/api', apiRateLimiter);
 
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', database: isConnected() ? 'connected' : 'disconnected' });

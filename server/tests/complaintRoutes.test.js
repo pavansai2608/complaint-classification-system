@@ -128,6 +128,18 @@ describe('POST /api/complaints', () => {
     expect(res.body.error.details.some((d) => d.field === 'description')).toBe(true);
     expect(createComplaint).not.toHaveBeenCalled();
   });
+
+  it('rejects an unknown field, such as an attempt to set status directly', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    const res = await request(app)
+      .post('/api/complaints')
+      .set('Authorization', `Bearer ${tokenFor('customer')}`)
+      .send({ ...validBody, status: 'Resolved' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'status')).toBe(true);
+    expect(createComplaint).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /api/complaints/mine', () => {
@@ -293,6 +305,18 @@ describe('PATCH /api/complaints/:id/status', () => {
 
     expect(res.status).toBe(404);
   });
+
+  it('rejects an unknown field, such as an attempt to set statusUpdatedBy directly', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    const res = await request(app)
+      .patch(`/api/complaints/${validId}/status`)
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ status: 'Resolved', statusUpdatedBy: 'someone-else' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'statusUpdatedBy')).toBe(true);
+    expect(updateComplaintStatus).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /api/complaints/:id/reply', () => {
@@ -389,5 +413,17 @@ describe('POST /api/complaints/:id/reply', () => {
       .send({ reply: 'Thanks.' });
 
     expect(res.status).toBe(404);
+  });
+
+  it('rejects an unknown field, such as an attempt to set repliedBy directly', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    const res = await request(app)
+      .post(`/api/complaints/${validId}/reply`)
+      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .send({ reply: 'Thanks.', repliedBy: 'someone-else' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'repliedBy')).toBe(true);
+    expect(sendComplaintReply).not.toHaveBeenCalled();
   });
 });

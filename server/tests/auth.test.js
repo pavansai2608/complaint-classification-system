@@ -87,6 +87,31 @@ describe('POST /api/auth/register', () => {
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('CONFLICT');
   });
+
+  it('rejects an unknown field, such as an attempt to set a role directly', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ name: 'Riya', email: 'riya@example.com', password: 'secret123', role: 'admin' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'role')).toBe(true);
+    expect(registerUser).not.toHaveBeenCalled();
+  });
+
+  it('returns 429 after too many registration attempts from the same client', async () => {
+    const freshApp = createApp({ clientOrigin: 'http://localhost:5173' });
+    registerUser.mockResolvedValue({ id: '1', name: 'Riya', email: 'riya@example.com', role: 'customer' });
+
+    let lastStatus;
+    for (let i = 0; i < 21; i += 1) {
+      const res = await request(freshApp)
+        .post('/api/auth/register')
+        .send({ name: 'Riya', email: `riya${i}@example.com`, password: 'secret123' });
+      lastStatus = res.status;
+    }
+
+    expect(lastStatus).toBe(429);
+  });
 });
 
 describe('POST /api/auth/login', () => {
@@ -145,6 +170,31 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(423);
     expect(res.body.error.code).toBe('ACCOUNT_LOCKED');
   });
+
+  it('rejects an unknown field', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'riya@example.com', password: 'secret123', rememberMe: true });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'rememberMe')).toBe(true);
+    expect(loginUser).not.toHaveBeenCalled();
+  });
+
+  it('returns 429 after too many login attempts from the same client', async () => {
+    const freshApp = createApp({ clientOrigin: 'http://localhost:5173' });
+    loginUser.mockRejectedValue(new ApiError(401, 'INVALID_CREDENTIALS', 'Incorrect email or password'));
+
+    let lastStatus;
+    for (let i = 0; i < 11; i += 1) {
+      const res = await request(freshApp)
+        .post('/api/auth/login')
+        .send({ email: 'riya@example.com', password: 'wrong' });
+      lastStatus = res.status;
+    }
+
+    expect(lastStatus).toBe(429);
+  });
 });
 
 describe('POST /api/auth/google', () => {
@@ -182,6 +232,16 @@ describe('POST /api/auth/google', () => {
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe('INVALID_GOOGLE_TOKEN');
     expect(res.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('rejects an unknown field', async () => {
+    const res = await request(app)
+      .post('/api/auth/google')
+      .send({ credential: 'valid-id-token', role: 'agent' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.some((d) => d.field === 'role')).toBe(true);
+    expect(loginWithGoogle).not.toHaveBeenCalled();
   });
 });
 
