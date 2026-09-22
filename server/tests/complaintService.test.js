@@ -178,7 +178,7 @@ describe('updateComplaintStatus', () => {
         statusUpdatedBy: 'agent-1',
         statusUpdatedAt: expect.any(Date),
       }),
-      { new: true },
+      { returnDocument: 'after' },
     );
   });
 
