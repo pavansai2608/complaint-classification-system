@@ -30,9 +30,21 @@ pipeline {
                     // nothing in the image (no writable $HOME, so npm's
                     // cache dir fails). Root is fine here - the container is
                     // thrown away at the end of the stage.
-                    agent { docker { image 'node:20-alpine'; args '-u root:root' } }
+                    //
+                    // Debian-based (not Alpine) and forced to amd64: the
+                    // integration test spins up mongodb-memory-server, which
+                    // downloads a real mongod binary. There is no official
+                    // MongoDB build for Alpine's musl libc, and - on this
+                    // arm64 Jenkins host - no official arm64 build for
+                    // Debian either (only Ubuntu), so this runs the
+                    // container emulated as amd64, where Debian builds are
+                    // always published. On an amd64 host this is a no-op.
+                    agent { docker { image 'node:20-slim'; args '-u root:root --platform=linux/amd64' } }
                     steps {
                         dir('server') {
+                            // mongod needs libcurl at runtime; node:20-slim
+                            // doesn't include it.
+                            sh 'apt-get update -qq && apt-get install -y -qq libcurl4'
                             sh 'npm ci'
                             sh 'npm test'
                         }
