@@ -51,7 +51,7 @@ describe('Home', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     renderHome()
     expect(await screen.findByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login')
-    expect(screen.getByRole('link', { name: 'create an account' })).toHaveAttribute('href', '/register')
+    expect(screen.getByRole('link', { name: /start for free/i })).toHaveAttribute('href', '/register')
   })
 
   it('redirects a logged-in user to their role page instead of showing this page', async () => {
