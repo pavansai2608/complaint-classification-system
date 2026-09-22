@@ -1,0 +1,23 @@
+# Runs once, the first time Mongo initialises an empty data directory.
+# Creates one scoped user per service so neither app ever holds root:
+# the server can read and write complaints, the ai-service can only read
+# them for similar-complaint lookup. Root stays bootstrap-only.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-init
+data:
+  create-users.js: |
+    const db = db.getSiblingDB('complaint_system');
+
+    db.createUser({
+      user: 'complaint_app',
+      pwd: process.env.MONGO_APP_PASSWORD,
+      roles: [{ role: 'readWrite', db: 'complaint_system' }],
+    });
+
+    db.createUser({
+      user: 'complaint_ai',
+      pwd: process.env.MONGO_AI_PASSWORD,
+      roles: [{ role: 'read', db: 'complaint_system' }],
+    });
