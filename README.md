@@ -150,23 +150,32 @@ sudo docker build -t complaint-ai-service:local ./ai-service
 sudo docker save complaint-server:local complaint-client:local complaint-ai-service:local | sudo k3s ctr images import -
 ```
 
-**HTTPS.** Without a domain, there's no certificate authority that will issue a real certificate for a bare IP address, so this uses a self-signed one instead - the browser will show a one-time warning, which is expected and fine for a project running under its own IP rather than a purchased domain:
+**HTTPS.** The deployment uses [sslip.io](https://sslip.io) to get a free hostname (`<ip-with-dashes>.sslip.io`) that resolves to the Elastic IP, and Traefik's built-in ACME resolver issues a real Let's Encrypt certificate for it — no browser warnings, auto-renewed. The Traefik config is applied by the Jenkinsfile during deploy, or can be placed manually:
 
 ```bash
-openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-  -keyout tls.key -out tls.crt \
-  -subj "/CN=<elastic-ip>" -addext "subjectAltName=IP:<elastic-ip>"
-sudo k3s kubectl create secret tls complaint-tls --cert=tls.crt --key=tls.key
+sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml <<'EOF'
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |
+    additionalArguments:
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.le.acme.email=<your-email>
+      - --certificatesresolvers.le.acme.storage=/data/acme.json
+    persistence:
+      enabled: true
+      path: /data
+      size: 128Mi
+EOF
 ```
 
-**Secrets and config.** Same idea as `k8s/secret.yaml` for Minikube (copy `k8s/secret.example.yaml`, fill in real values, `kubectl apply`) - but also patch the ConfigMap, since `k8s/configmap.yaml` ships with Minikube-specific values that don't apply here:
+**Secrets and config.** Same idea as `k8s/secret.yaml` for Minikube (copy `k8s/secret.example.yaml`, fill in real values, `kubectl apply`).
 
-```bash
-sudo k3s kubectl patch configmap complaint-config --type merge \
-  -p '{"data":{"CLIENT_ORIGIN":"https://<elastic-ip>","GOOGLE_CLIENT_ID":"<your-client-id>"}}'
-```
-
-Then apply everything, plus the EC2-specific Ingress (IP-based, TLS-terminated by k3s's built-in Traefik, unlike `client.yaml`'s Ingress which is host-based and TLS-free for Minikube):
+Then apply everything:
 
 ```bash
 sudo k3s kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
@@ -174,7 +183,7 @@ sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.ya
 sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
 ```
 
-Open `https://<elastic-ip>` (click through the certificate warning). Check pods with `sudo k3s kubectl get pods` - all should be `Running`.
+Open `https://<ip-with-dashes>.sslip.io` — the browser will show the padlock with no warnings. Check pods with `sudo k3s kubectl get pods` - all should be `Running`.
 
 **Cost.** Stopping the instance (`aws ec2 stop-instances --instance-ids <id>`) when it's not being used or demoed costs almost nothing (just the EBS disk, a couple of dollars a month) - only a running instance is billed for compute. The Elastic IP stays attached across stop/start, so nothing needs reconfiguring when you start it again.
 

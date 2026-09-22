@@ -177,6 +177,26 @@ pipeline {
                             sudo docker build --build-arg VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID -t complaint-client:local ./client
                             sudo docker save complaint-server:local complaint-ai-service:local complaint-client:local | sudo k3s ctr images import -
 
+                            # Traefik ACME config for auto-renewing Let's Encrypt certs
+                            sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml <<TRAEFIKCFG
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |
+    additionalArguments:
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.le.acme.email=golipavansaikrishna2608@gmail.com
+      - --certificatesresolvers.le.acme.storage=/data/acme.json
+    persistence:
+      enabled: true
+      path: /data
+      size: 128Mi
+TRAEFIKCFG
+
                             sudo k3s kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
                             sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.yaml -f k8s/client.yaml
                             sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
@@ -206,8 +226,9 @@ pipeline {
                         python3 -m venv .venv
                         . .venv/bin/activate
                         pip install --no-cache-dir -r requirements.txt
-                        CLIENT_BASE_URL=https://$EC2_HOST \
-                        SERVER_BASE_URL=https://$EC2_HOST \
+                        SSLIP_HOST=$(echo $EC2_HOST | tr '.' '-').sslip.io
+                        CLIENT_BASE_URL=https://$SSLIP_HOST \
+                        SERVER_BASE_URL=https://$SSLIP_HOST \
                             python -m unittest discover -p "*_tests.py" -v
                     '''
                 }

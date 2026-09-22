@@ -1,5 +1,4 @@
 import json
-import ssl
 import unittest
 import urllib.error
 import urllib.request
@@ -13,13 +12,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import config
 
-# The EC2/k3s deployment (CCS-63) uses a self-signed cert - there's no
-# domain to get a real one for. Only used for https:// targets; a real
-# deployment behind a real cert still gets verified normally.
-_INSECURE_SSL_CONTEXT = ssl.create_default_context()
-_INSECURE_SSL_CONTEXT.check_hostname = False
-_INSECURE_SSL_CONTEXT.verify_mode = ssl.CERT_NONE
-
 
 class BaseE2ETest(unittest.TestCase):
     """Starts a fresh headless Chrome for every test and checks the app is up first."""
@@ -32,10 +24,7 @@ class BaseE2ETest(unittest.TestCase):
     @staticmethod
     def _check_running(url, name):
         try:
-            kwargs = {"timeout": 5}
-            if urlparse(url).scheme == "https":
-                kwargs["context"] = _INSECURE_SSL_CONTEXT
-            with urllib.request.urlopen(url, **kwargs) as response:
+            with urllib.request.urlopen(url, timeout=5) as response:
                 if name == "server" and json.load(response).get("status") != "ok":
                     raise RuntimeError("health check did not report ok")
         except (urllib.error.URLError, OSError, ValueError, RuntimeError) as err:
@@ -49,8 +38,6 @@ class BaseE2ETest(unittest.TestCase):
         if config.HEADLESS:
             options.add_argument("--headless=new")
         options.add_argument("--window-size=1280,900")
-        # Same self-signed-cert reason as the health check above.
-        options.set_capability("acceptInsecureCerts", True)
         self.driver = webdriver.Chrome(options=options)
         self.addCleanup(self.driver.quit)
         self.wait = WebDriverWait(self.driver, config.TIMEOUT)

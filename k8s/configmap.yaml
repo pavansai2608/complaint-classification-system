@@ -5,7 +5,7 @@ metadata:
 data:
   # server
   PORT: "4000"
-  CLIENT_ORIGIN: "http://complaint.local"
+  CLIENT_ORIGIN: "https://3-105-252-57.sslip.io"
   # MONGODB_URI now carries credentials, so it lives in the Secret instead.
   AI_SERVICE_URL: "http://ai-service:8000"
   # Higher than the 5s used for local dev: in the cluster the ai-service is
@@ -18,7 +18,7 @@ data:
   # Client ID is a public identifier (verifies a token Google already
   # signed), so it's config, not a secret. Same value the client is built
   # with as VITE_GOOGLE_CLIENT_ID.
-  GOOGLE_CLIENT_ID: "your-client-id.apps.googleusercontent.com"
+  GOOGLE_CLIENT_ID: "700204212938-2p8u0t6ois8g7t1a29k6k49g5almj4c4.apps.googleusercontent.com"
 
   # ai-service
   ENABLE_DOCS: "false"

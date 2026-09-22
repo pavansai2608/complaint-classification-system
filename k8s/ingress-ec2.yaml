@@ -1,23 +1,21 @@
-# Ingress for the EC2/k3s deployment (CCS-63) - reachable by the instance's
-# Elastic IP directly, over HTTPS, using k3s's built-in Traefik ingress
-# controller. This is separate from the Ingress in client.yaml, which is for
-# local Minikube (host-based, no TLS) - the two aren't meant to be applied
-# together.
+# Ingress for the EC2/k3s deployment - reachable via the sslip.io hostname
+# that maps to the instance's Elastic IP, with a real Let's Encrypt TLS
+# certificate issued and auto-renewed by Traefik's built-in ACME resolver.
 #
-# Requires a TLS secret named "complaint-tls" to exist first:
-#   kubectl create secret tls complaint-tls --cert=tls.crt --key=tls.key
-# See the README for how the cert is generated.
+# Traefik is configured via a HelmChartConfig manifest placed in
+# /var/lib/rancher/k3s/server/manifests/traefik-config.yaml on the EC2 box
+# (see the Deploy stage in the Jenkinsfile).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: complaint-ingress-ec2
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: le
 spec:
-  tls:
-    - secretName: complaint-tls
   rules:
-    - http:
+    - host: 3-105-252-57.sslip.io
+      http:
         paths:
           - path: /
             pathType: Prefix
@@ -26,3 +24,13 @@ spec:
                 name: client
                 port:
                   number: 8080
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: server
+                port:
+                  number: 4000
+  tls:
+    - hosts:
+        - 3-105-252-57.sslip.io
