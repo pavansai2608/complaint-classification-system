@@ -53,11 +53,13 @@ The CORS package always answers with the one allowed origin. A request from `htt
 
 ## The React page (`client/`)
 
-The headers above come from the API. The web page itself (the HTML the browser loads) must send its own headers, because Helmet only covers the API.
+The headers above come from the API. The web page itself (the HTML the browser loads) sends its own headers, set in `client/nginx.conf` (CCS-69), because Helmet only covers the API.
 
-- **Not checked yet.** The Vite development server sends none of them, and there is no production web server yet.
-- **Gap:** when the client is served from a container (CCS-49) or the cluster (CCS-60), the web server must send `Content-Security-Policy`, `X-Frame-Options` (or `frame-ancestors`), `X-Content-Type-Options`, `Referrer-Policy` and HSTS.
-- **Starting point for the page's CSP:** `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`. The app uses inline styles, so styles need `'unsafe-inline'`. If Google sign-in is turned on, also allow `https://accounts.google.com` for scripts, frames and connections.
+**Checked 22 Sep 2026** by building the container image and requesting it directly (bypassing the cluster, using a stand-in for the `server` upstream): all of `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` and `Strict-Transport-Security` are present on `/`, on the SPA fallback path (any unmatched route, which still returns 200 by design), and on `/api/*` (the proxied route). Status: **OK**.
+
+The page's CSP is `default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://accounts.google.com; frame-src https://accounts.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`. The app uses inline styles, so `style-src` needs `'unsafe-inline'`. Google Sign-In is turned on (`client/src/pages/Login.jsx`), so `script-src`, `frame-src` and `connect-src` allow `https://accounts.google.com`.
+
+`Strict-Transport-Security` only takes effect once the site is actually served over HTTPS, same as the API - re-check after CCS-63.
 
 ## How to check a header yourself
 
@@ -79,7 +81,7 @@ Automated scanning of the running site is planned with OWASP ZAP (CCS-62).
 
 ## Gaps and notes
 
-1. **The React page sends no security headers.** Add them in the web server config when the client is containerised (CCS-49, CCS-60). There is no card that says this explicitly yet.
+1. ~~The React page sends no security headers.~~ Fixed in CCS-69.
 2. **`Secure` on the cookie** must be checked again on the deployed HTTPS site (CCS-63).
 3. **Bad JSON error text:** a broken request body returns the parser's own message (for example `Expected property name or '}' in JSON at position 1`). It is low risk, but the server should return a fixed message such as "Invalid JSON".
 4. **`Permissions-Policy`** is not set. Optional.
