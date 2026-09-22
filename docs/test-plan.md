@@ -107,7 +107,7 @@ Today: 10 server test files, 9 client test files, 3 ai-service test files and 1 
 | Prompt injection guard not tested | Guard not built yet | CCS-55, CCS-66 |
 | LLM evaluation harness not verified | Scores must be checked to be real | CCS-67 |
 | No pipeline yet | Tests only run by hand | CCS-50, CCS-61 |
-| No security scans yet | No automatic check of packages or the running app | CCS-62 |
+| Security scans run by hand only | Reports are in [docs/security](security/README.md), but nothing runs them automatically and Docker images are not scanned yet | CCS-50, CCS-61, CCS-49 |
 
 **Decision needed from the team:** to test the server against a real database we would add a new tool, for example an in-memory MongoDB or a Docker container. Agree on this before adding it.
 

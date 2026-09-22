@@ -1,0 +1,10 @@
+npm audit report: server
+Date: 2026-09-22
+Node: v24.13.1, npm: 11.8.0
+Command: cd server && npm audit
+
+found 0 vulnerabilities
+
+Summary (from npm audit --json):
+{'info': 0, 'low': 0, 'moderate': 0, 'high': 0, 'critical': 0, 'total': 0}
+packages checked: 464

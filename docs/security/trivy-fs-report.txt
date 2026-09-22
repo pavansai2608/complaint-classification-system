@@ -1,0 +1,25 @@
+Trivy report: project files (dependencies, secrets, configuration)
+Date: 2026-09-22
+Tool: aquasec/trivy:latest (Trivy v0.74)
+Command: trivy fs --scanners vuln,secret,misconfig --severity LOW,MEDIUM,HIGH,CRITICAL <copy of the repository files>
+Scope: every file tracked in the repository, except the trained model file. node_modules and virtual environments were not included.
+Not covered: Docker images. The project has no Dockerfiles yet (planned in CCS-49).
+No configuration files (Dockerfile, Kubernetes) were found to check.
+
+Report Summary
+
+┌─────────────────────────────┬──────┬─────────────────┬─────────┬───────────────────┐
+│           Target            │ Type │ Vulnerabilities │ Secrets │ Misconfigurations │
+├─────────────────────────────┼──────┼─────────────────┼─────────┼───────────────────┤
+│ ai-service/requirements.txt │ pip  │        0        │    -    │         -         │
+├─────────────────────────────┼──────┼─────────────────┼─────────┼───────────────────┤
+│ client/package-lock.json    │ npm  │        0        │    -    │         -         │
+├─────────────────────────────┼──────┼─────────────────┼─────────┼───────────────────┤
+│ e2e-tests/requirements.txt  │ pip  │        0        │    -    │         -         │
+├─────────────────────────────┼──────┼─────────────────┼─────────┼───────────────────┤
+│ server/package-lock.json    │ npm  │        0        │    -    │         -         │
+└─────────────────────────────┴──────┴─────────────────┴─────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+

@@ -1,0 +1,7 @@
+pip-audit report: ai-service
+Date: 2026-09-22
+Tool: pip-audit 2.10.1
+Command: pip-audit -r requirements-dev.txt --no-deps --disable-pip
+Scope: the pinned packages in requirements.txt and requirements-dev.txt only (not their sub-dependencies).
+
+No known vulnerabilities found
