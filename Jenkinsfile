@@ -3,8 +3,11 @@ pipeline {
 
     options {
         timestamps()
-        // A stuck test run shouldn't hang the pipeline forever.
-        timeout(time: 20, unit: 'MINUTES')
+        // A stuck test run shouldn't hang the pipeline forever. This is
+        // generous because the ai-service stage installs torch and lets
+        // PyBuilder build fresh virtualenvs on every run, which takes far
+        // longer than the other two suites.
+        timeout(time: 60, unit: 'MINUTES')
     }
 
     stages {
