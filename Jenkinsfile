@@ -160,5 +160,53 @@ pipeline {
                 }
             }
         }
+
+        stage('E2E (Selenium)') {
+            // Drives the real browser flows (register, log in, submit a
+            // complaint) against the app that was just deployed above, the
+            // same way a person would use it.
+            when { branch 'main' }
+            agent any
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl port-forward svc/client 18080:8080 \
+                            >"$WORKSPACE/.e2e-client-pf.log" 2>&1 &
+                        echo $! > "$WORKSPACE/.e2e-client-pf.pid"
+                        kubectl port-forward svc/server 18090:4000 \
+                            >"$WORKSPACE/.e2e-server-pf.log" 2>&1 &
+                        echo $! > "$WORKSPACE/.e2e-server-pf.pid"
+
+                        # Wait for the server's port-forward to actually be
+                        # accepting connections before the tests start.
+                        for i in $(seq 1 15); do
+                            curl -sf http://localhost:18090/api/health >/dev/null && break
+                            sleep 1
+                        done
+
+                        cd e2e-tests
+                        python3 -m venv .venv
+                        . .venv/bin/activate
+                        pip install --no-cache-dir -r requirements.txt
+                        CLIENT_BASE_URL=http://localhost:18080 \
+                        SERVER_BASE_URL=http://localhost:18090 \
+                            python -m unittest discover -p "*_tests.py" -v
+                    '''
+                }
+            }
+            post {
+                always {
+                    // The port-forwards are background processes started
+                    // above - without this they'd outlive the build.
+                    sh '''
+                        [ -f "$WORKSPACE/.e2e-client-pf.pid" ] && \
+                            kill "$(cat "$WORKSPACE/.e2e-client-pf.pid")" 2>/dev/null || true
+                        [ -f "$WORKSPACE/.e2e-server-pf.pid" ] && \
+                            kill "$(cat "$WORKSPACE/.e2e-server-pf.pid")" 2>/dev/null || true
+                        rm -f "$WORKSPACE/.e2e-client-pf.pid" "$WORKSPACE/.e2e-server-pf.pid"
+                    '''
+                }
+            }
+        }
     }
 }
