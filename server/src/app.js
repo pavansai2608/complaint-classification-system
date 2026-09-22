@@ -16,6 +16,12 @@ const complaintRoutes = require('./routes/complaintRoutes');
 function createApp({ clientOrigin }) {
   const app = express();
 
+  // The server is never internet-facing directly - it only ever sits behind
+  // exactly one reverse proxy (the k8s ingress controller, or nothing in
+  // local dev). Trusting the first hop lets express-rate-limit read the
+  // real client IP from X-Forwarded-For instead of throwing on it.
+  app.set('trust proxy', 1);
+
   // Secure HTTP headers (also removes the X-Powered-By header)
   app.use(helmet());
 

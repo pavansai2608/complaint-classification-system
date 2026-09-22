@@ -1,0 +1,28 @@
+# Ingress for the EC2/k3s deployment (CCS-63) - reachable by the instance's
+# Elastic IP directly, over HTTPS, using k3s's built-in Traefik ingress
+# controller. This is separate from the Ingress in client.yaml, which is for
+# local Minikube (host-based, no TLS) - the two aren't meant to be applied
+# together.
+#
+# Requires a TLS secret named "complaint-tls" to exist first:
+#   kubectl create secret tls complaint-tls --cert=tls.crt --key=tls.key
+# See the README for how the cert is generated.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: complaint-ingress-ec2
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  tls:
+    - secretName: complaint-tls
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client
+                port:
+                  number: 8080
