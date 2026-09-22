@@ -13,12 +13,20 @@ improvement.
 import datetime
 import json
 import sys
+import time
 from pathlib import Path
 
 AI_SERVICE_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(AI_SERVICE_ROOT / "src" / "main" / "python"))
 
-from app.reply_generator import PROMPT_VERSION, _client, _model_name, generate_suggested_reply  # noqa: E402
+from app.reply_generator import (  # noqa: E402
+    PROMPT_VERSION,
+    _client,
+    _groq_client,
+    _groq_model_name,
+    _model_name,
+    generate_suggested_reply,
+)
 from google.genai import types  # noqa: E402
 
 EVAL_DIR = Path(__file__).resolve().parent
@@ -31,14 +39,14 @@ JUDGE_INSTRUCTION = (
 )
 
 
-def judge_reply(complaint_text: str, reply: str, expected_qualities: list) -> int:
-    qualities = "\n".join(f"- {q}" for q in expected_qualities)
-    prompt = (
-        f"Customer complaint: {complaint_text}\n\n"
-        f"Agent reply to grade: {reply}\n\n"
-        f"Expected qualities:\n{qualities}\n\n"
-        "Score (1-5):"
-    )
+def _parse_score(text: str) -> int:
+    try:
+        return int((text or "").strip().split()[0])
+    except (ValueError, IndexError):
+        return 0
+
+
+def _judge_with_gemini(prompt: str) -> str:
     client = _client()
     response = client.models.generate_content(
         model=_model_name(),
@@ -50,10 +58,42 @@ def judge_reply(complaint_text: str, reply: str, expected_qualities: list) -> in
             http_options=types.HttpOptions(timeout=10_000),
         ),
     )
+    return response.text or ""
+
+
+def _judge_with_groq(prompt: str) -> str:
+    client = _groq_client()
+    response = client.chat.completions.create(
+        model=_groq_model_name(),
+        messages=[
+            {"role": "system", "content": JUDGE_INSTRUCTION},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0,
+        max_tokens=50,
+        reasoning_effort="low",
+        timeout=10,
+    )
+    return response.choices[0].message.content or ""
+
+
+def judge_reply(complaint_text: str, reply: str, expected_qualities: list) -> int:
+    # Same Gemini-then-Groq fallback as generate_suggested_reply, so the
+    # eval can still run once Gemini's daily free-tier quota is exhausted.
+    qualities = "\n".join(f"- {q}" for q in expected_qualities)
+    prompt = (
+        f"Customer complaint: {complaint_text}\n\n"
+        f"Agent reply to grade: {reply}\n\n"
+        f"Expected qualities:\n{qualities}\n\n"
+        "Score (1-5):"
+    )
     try:
-        return int((response.text or "").strip().split()[0])
-    except (ValueError, IndexError):
-        return 0
+        return _parse_score(_judge_with_gemini(prompt))
+    except Exception:
+        try:
+            return _parse_score(_judge_with_groq(prompt))
+        except Exception:
+            return 0
 
 
 def main():
@@ -63,8 +103,12 @@ def main():
 
     for sample in samples:
         result = generate_suggested_reply(sample["text"], sample["category"], sample["priority"])
+        # The free tier allows 5 requests/minute; each sample makes 2 calls
+        # (generate + judge), so pace them to stay under that.
+        time.sleep(13)
         score = judge_reply(sample["text"], result["reply"], sample["expected_qualities"])
         scores.append(score)
+        time.sleep(13)
         body_lines.append(
             f"Sample {sample['id']} ({sample['category']}, {sample['priority']}) "
             f"- source={result['source']}, score={score}/5"

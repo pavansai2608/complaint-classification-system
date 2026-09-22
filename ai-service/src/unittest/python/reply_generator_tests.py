@@ -10,6 +10,12 @@ def _mock_response(text):
     return response
 
 
+def _mock_groq_response(text):
+    response = MagicMock()
+    response.choices[0].message.content = text
+    return response
+
+
 class ReplyGeneratorTests(unittest.TestCase):
     @patch("app.reply_generator.find_similar_complaints", return_value=[])
     @patch("app.reply_generator._client")
@@ -22,9 +28,25 @@ class ReplyGeneratorTests(unittest.TestCase):
         self.assertIn("double charge", result["reply"])
 
     @patch("app.reply_generator.find_similar_complaints", return_value=[])
+    @patch("app.reply_generator._groq_client")
     @patch("app.reply_generator._client")
-    def test_api_failure_returns_the_fallback_template(self, mock_client, mock_similar):
-        mock_client.return_value.models.generate_content.side_effect = TimeoutError("timed out")
+    def test_gemini_failure_falls_back_to_groq(self, mock_gemini_client, mock_groq_client, mock_similar):
+        mock_gemini_client.return_value.models.generate_content.side_effect = TimeoutError("timed out")
+        mock_groq_client.return_value.chat.completions.create.return_value = _mock_groq_response(
+            "We're looking into the duplicate charge on your account."
+        )
+        result = generate_suggested_reply("I was charged twice", "billing", "Medium")
+        self.assertEqual(result["source"], "groq")
+        self.assertIn("duplicate charge", result["reply"])
+
+    @patch("app.reply_generator.find_similar_complaints", return_value=[])
+    @patch("app.reply_generator._groq_client")
+    @patch("app.reply_generator._client")
+    def test_both_providers_failing_returns_the_fallback_template(
+        self, mock_gemini_client, mock_groq_client, mock_similar
+    ):
+        mock_gemini_client.return_value.models.generate_content.side_effect = TimeoutError("timed out")
+        mock_groq_client.return_value.chat.completions.create.side_effect = TimeoutError("timed out")
         result = generate_suggested_reply("I was charged twice", "billing", "Medium")
         self.assertEqual(result["source"], "fallback")
         self.assertIn("billing", result["reply"])
