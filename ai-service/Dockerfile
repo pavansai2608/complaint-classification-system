@@ -15,6 +15,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin appuser
 COPY --from=deps --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser src/main/python ./src/main/python
 COPY --chown=appuser:appuser models ./models
+COPY --chown=appuser:appuser config ./config
 
 ENV PATH=/home/appuser/.local/bin:$PATH \
     PYTHONPATH=/app/src/main/python
