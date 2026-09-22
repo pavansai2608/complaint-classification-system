@@ -5,7 +5,12 @@ pipeline {
         // Images are tagged with the commit they were built from, never
         // "latest", so what's running in the cluster can always be traced
         // back to a commit and rolled back to a previous one.
-        TAG = "${env.GIT_COMMIT.take(12)}"
+        //
+        // GIT_COMMIT is null during a lightweight "branch indexing" run
+        // (Jenkins evaluating this file's structure without a real SCM
+        // checkout), so this has to tolerate that instead of crashing the
+        // whole pipeline before any stage runs.
+        TAG = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(12) : 'unknown'}"
     }
 
     options {
@@ -125,37 +130,50 @@ pipeline {
         stage('Deploy') {
             // Only main deploys. Feature branches still get tested, built and
             // scanned, but must not touch the running cluster.
+            //
+            // Targets the EC2/k3s box (CCS-63), not Minikube - Minikube only
+            // ever existed on one person's laptop, so it was never a real
+            // deployment target. k3s doesn't share a Docker daemon with this
+            // Jenkins host, so instead of loading a locally-built image in,
+            // this builds the images directly on the EC2 box over SSH - the
+            // same commands a person would run by hand (see the README),
+            // just scripted. The instance has to be running for this to
+            // succeed; if it's stopped to save cost between sessions, this
+            // stage just fails safely rather than deploying nothing silently.
             when { branch 'main' }
             agent any
             steps {
-                // The kubeconfig is a Jenkins file credential, never a file in
-                // the repo. Secrets are applied separately by hand (see the
-                // README) - this pipeline does not create or read them.
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_SSH_KEY', usernameVariable: 'EC2_SSH_USER'),
+                    string(credentialsId: 'ec2-host', variable: 'EC2_HOST'),
+                    string(credentialsId: 'google-client-id', variable: 'GOOGLE_CLIENT_ID'),
+                ]) {
                     sh '''
-                        # Minikube runs its own Docker daemon, so images built
-                        # on the host have to be copied in before the cluster
-                        # can start containers from them.
-                        minikube image load complaint-server:$TAG
-                        minikube image load complaint-ai-service:$TAG
-                        minikube image load complaint-client:$TAG
+                        SSH="ssh -i $EC2_SSH_KEY -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
 
-                        kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
-                        kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml \
-                            -f k8s/ai-service.yaml -f k8s/client.yaml
+                        tar --exclude='./.git' --exclude='./ai-service/target' \
+                            --exclude='./ai-service/__pycache__' \
+                            --exclude='./server/node_modules' --exclude='./client/node_modules' \
+                            --exclude='./client/dist' -czf /tmp/ccs-deploy.tar.gz .
+                        rsync -az -e "$SSH" /tmp/ccs-deploy.tar.gz $EC2_SSH_USER@$EC2_HOST:/home/$EC2_SSH_USER/ccs-deploy.tar.gz
 
-                        # The manifests carry the :local tag for hand-run
-                        # deploys; point each Deployment at the image built
-                        # from this exact commit instead.
-                        kubectl set image deployment/server server=complaint-server:$TAG
-                        kubectl set image deployment/ai-service ai-service=complaint-ai-service:$TAG
-                        kubectl set image deployment/client client=complaint-client:$TAG
+                        $SSH $EC2_SSH_USER@$EC2_HOST "
+                            rm -rf ~/app && mkdir -p ~/app && tar -xzf ccs-deploy.tar.gz -C ~/app && rm ccs-deploy.tar.gz
+                            cd ~/app
+                            sudo docker build -t complaint-server:local ./server
+                            sudo docker build -t complaint-ai-service:local ./ai-service
+                            sudo docker build --build-arg VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID -t complaint-client:local ./client
+                            sudo docker save complaint-server:local complaint-ai-service:local complaint-client:local | sudo k3s ctr images import -
 
-                        # Fail the build if a new pod never becomes ready,
-                        # rather than reporting success on a broken deploy.
-                        kubectl rollout status deployment/server --timeout=300s
-                        kubectl rollout status deployment/ai-service --timeout=600s
-                        kubectl rollout status deployment/client --timeout=300s
+                            sudo k3s kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
+                            sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.yaml -f k8s/client.yaml
+                            sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
+
+                            sudo k3s kubectl rollout restart deployment/server deployment/ai-service deployment/client
+                            sudo k3s kubectl rollout status deployment/server --timeout=300s
+                            sudo k3s kubectl rollout status deployment/ai-service --timeout=600s
+                            sudo k3s kubectl rollout status deployment/client --timeout=300s
+                        "
                     '''
                 }
             }
@@ -163,47 +181,22 @@ pipeline {
 
         stage('E2E (Selenium)') {
             // Drives the real browser flows (register, log in, submit a
-            // complaint) against the app that was just deployed above, the
-            // same way a person would use it.
+            // complaint) against the app that was just deployed above, over
+            // its real public HTTPS address - the same way a person would
+            // use it. No port-forward needed now that the deploy target is
+            // a reachable EC2 box rather than a local-only Minikube cluster.
             when { branch 'main' }
             agent any
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                withCredentials([string(credentialsId: 'ec2-host', variable: 'EC2_HOST')]) {
                     sh '''
-                        kubectl port-forward svc/client 18080:8080 \
-                            >"$WORKSPACE/.e2e-client-pf.log" 2>&1 &
-                        echo $! > "$WORKSPACE/.e2e-client-pf.pid"
-                        kubectl port-forward svc/server 18090:4000 \
-                            >"$WORKSPACE/.e2e-server-pf.log" 2>&1 &
-                        echo $! > "$WORKSPACE/.e2e-server-pf.pid"
-
-                        # Wait for the server's port-forward to actually be
-                        # accepting connections before the tests start.
-                        for i in $(seq 1 15); do
-                            curl -sf http://localhost:18090/api/health >/dev/null && break
-                            sleep 1
-                        done
-
                         cd e2e-tests
                         python3 -m venv .venv
                         . .venv/bin/activate
                         pip install --no-cache-dir -r requirements.txt
-                        CLIENT_BASE_URL=http://localhost:18080 \
-                        SERVER_BASE_URL=http://localhost:18090 \
+                        CLIENT_BASE_URL=https://$EC2_HOST \
+                        SERVER_BASE_URL=https://$EC2_HOST \
                             python -m unittest discover -p "*_tests.py" -v
-                    '''
-                }
-            }
-            post {
-                always {
-                    // The port-forwards are background processes started
-                    // above - without this they'd outlive the build.
-                    sh '''
-                        [ -f "$WORKSPACE/.e2e-client-pf.pid" ] && \
-                            kill "$(cat "$WORKSPACE/.e2e-client-pf.pid")" 2>/dev/null || true
-                        [ -f "$WORKSPACE/.e2e-server-pf.pid" ] && \
-                            kill "$(cat "$WORKSPACE/.e2e-server-pf.pid")" 2>/dev/null || true
-                        rm -f "$WORKSPACE/.e2e-client-pf.pid" "$WORKSPACE/.e2e-server-pf.pid"
                     '''
                 }
             }
