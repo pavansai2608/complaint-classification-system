@@ -55,7 +55,7 @@ async function updateComplaintStatus(complaintId, status, agentId) {
   return Complaint.findByIdAndUpdate(
     complaintId,
     { status, statusUpdatedBy: agentId, statusUpdatedAt: new Date() },
-    { new: true },
+    { returnDocument: 'after' },
   );
 }
 

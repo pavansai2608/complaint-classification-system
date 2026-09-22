@@ -160,7 +160,7 @@ describe('loginUser', () => {
     expect(User.findOneAndUpdate).toHaveBeenCalledWith(
       { _id: '1' },
       { $inc: { failedLogins: 1 } },
-      { new: true },
+      { returnDocument: 'after' },
     );
     expect(User.updateOne).not.toHaveBeenCalled();
   });

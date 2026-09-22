@@ -15,5 +15,8 @@ target/
 .env.*
 !.env.example
 
+# Real Kubernetes secret values (keep secret.example.yaml)
+k8s/secret.yaml
+
 # OS
 .DS_Store
