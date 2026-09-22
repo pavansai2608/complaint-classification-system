@@ -12,6 +12,13 @@ RUN grep -v '^torch' requirements.txt > requirements-notorch.txt && \
 FROM python:3.11-slim
 WORKDIR /app
 RUN useradd --create-home --shell /usr/sbin/nologin appuser
+# uvicorn runs from appuser's own .local install below; the system
+# interpreter's bundled pip/setuptools (and their vendored dependencies)
+# are never invoked at runtime, so remove them rather than carry unused code.
+RUN pip uninstall -y pip setuptools wheel 2>/dev/null; \
+    rm -rf /usr/local/lib/python3.11/site-packages/setuptools* \
+           /usr/local/lib/python3.11/site-packages/pip* \
+           /usr/local/lib/python3.11/site-packages/wheel*
 COPY --from=deps --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser src/main/python ./src/main/python
 COPY --chown=appuser:appuser models ./models

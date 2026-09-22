@@ -117,14 +117,19 @@ cd ai-service && source .venv/bin/activate && pyb
 
 ## Continuous integration
 
-A `Jenkinsfile` at the repo root runs the server, client and ai-service test suites in parallel on every push, each in its own throwaway Docker container (`node:20-alpine` / `python:3.11-slim`) so the Jenkins host itself doesn't need Node or Python installed. A failing test fails the build.
+A `Jenkinsfile` at the repo root runs four stages on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), and **Deploy** (`kubectl apply` of the `k8s/` manifests, then `kubectl set image` to point each Deployment at the newly built image, then `kubectl rollout status` so a pod that never becomes ready fails the build instead of reporting success).
+
+A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vulnerability stops the pipeline before anything is deployed. **Deploy only runs on `main`** - feature branches are tested, built and scanned, but never touch the running cluster.
 
 To set this up on a Jenkins instance:
 
 1. Install the **Docker Pipeline** plugin (for the `agent { docker { ... } }` blocks) and the **GitHub Branch Source** plugin.
 2. New Item → **Multibranch Pipeline**, point it at this repo's URL, and set the script path to `Jenkinsfile` (the default).
 3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
-4. No credentials are needed for the test stage today - the test suites mock all external calls. When a later stage needs real credentials (registry push, deploy), add them under **Manage Jenkins → Credentials** and reference them by ID in the `Jenkinsfile`; never put a real secret in the file itself.
+4. Under **Manage Jenkins → Credentials**, add two credentials, referenced by ID in the `Jenkinsfile` and never written into it directly:
+   - `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
+   - `kubeconfig` (Secret file) - a kubeconfig with access to the target cluster, used only by the Deploy stage.
+5. The Jenkins host needs `minikube` and `kubectl` on its `PATH` and access to the Docker socket the images were built on, since `minikube image load` copies images from the host's Docker daemon into the cluster's.
 
 ## Contributing
 
