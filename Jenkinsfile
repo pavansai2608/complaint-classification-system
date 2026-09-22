@@ -62,15 +62,16 @@ pipeline {
                 }
 
                 stage('AI service (unittest)') {
+                    // PyBuilder creates its own build/test venvs and installs
+                    // requirements.txt into those directly, so the CPU-only
+                    // torch index is configured in build.py itself (via
+                    // install_dependencies_extra_index_url) rather than here -
+                    // installing torch into this outer container first never
+                    // reached pyb's isolated venvs and just wasted time.
                     agent { docker { image 'python:3.11-slim'; args '-u root:root' } }
                     steps {
                         dir('ai-service') {
-                            sh '''
-                                grep -v '^torch' requirements.txt > requirements-notorch.txt
-                                pip install --no-cache-dir torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
-                                pip install --no-cache-dir -r requirements-notorch.txt
-                                pip install --no-cache-dir httpx2==2.13.0 pybuilder==0.13.23
-                            '''
+                            sh 'pip install --no-cache-dir pybuilder==0.13.23'
                             sh 'pyb'
                         }
                     }
