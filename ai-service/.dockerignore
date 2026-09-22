@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+.pybuilder
+target
+.env
+.env.*
+!.env.example
+src/unittest
+eval
+.git

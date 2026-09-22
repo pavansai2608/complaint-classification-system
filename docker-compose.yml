@@ -1,0 +1,56 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # Loopback-only: server and ai-service reach mongo via the internal
+    # "mongo" DNS name and don't need this published at all. Mongo runs
+    # with no auth, so binding to 0.0.0.0 would expose the whole database
+    # to anything on the LAN, not just this machine.
+    ports:
+      - "127.0.0.1:27017:27017"
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/complaint_system
+      AI_SERVICE_URL: http://ai-service:8000
+      CLIENT_ORIGIN: http://localhost:8080
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+      - ai-service
+
+  ai-service:
+    build: ./ai-service
+    restart: unless-stopped
+    env_file:
+      - ./ai-service/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/complaint_system
+    # Loopback-only: the server reaches this over the internal network via
+    # AI_SERVICE_URL above. Publishing it on 0.0.0.0 would expose an
+    # internal-only service (and its shared-key auth) to the whole LAN.
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - mongo
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server
+
+volumes:
+  mongo_data:
