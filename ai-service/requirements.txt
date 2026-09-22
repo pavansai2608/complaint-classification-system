@@ -2,7 +2,7 @@ fastapi==0.141.1
 uvicorn[standard]==0.53.0
 scikit-learn==1.7.2
 pandas==2.3.3
-joblib==1.5.2
+joblib==1.6.0
 transformers==5.17.0
 torch==2.14.0
 google-genai==2.24.0
