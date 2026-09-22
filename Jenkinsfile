@@ -65,7 +65,12 @@ pipeline {
                     agent { docker { image 'python:3.11-slim'; args '-u root:root' } }
                     steps {
                         dir('ai-service') {
-                            sh 'pip install --no-cache-dir -r requirements-dev.txt'
+                            sh '''
+                                grep -v '^torch' requirements.txt > requirements-notorch.txt
+                                pip install --no-cache-dir torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+                                pip install --no-cache-dir -r requirements-notorch.txt
+                                pip install --no-cache-dir httpx2==2.13.0 pybuilder==0.13.23
+                            '''
                             sh 'pyb'
                         }
                     }
