@@ -1,10 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-light: #dbeafe;
-  --color-on-primary: #ffffff;
+  /* Warm amber + purple on near-black - a deliberate departure from the
+     generic blue-SaaS palette. On-primary is dark, not white: amber doesn't
+     have enough contrast against white text to pass WCAG AA. */
+  --color-primary: #f59e0b;
+  --color-primary-hover: #d97706;
+  --color-primary-light: #fef3c7;
+  --color-on-primary: #1c1305;
   --color-accent: #8b5cf6;
   --color-accent-light: #ede9fe;
   --color-background: #f8fafc;
@@ -18,11 +21,12 @@
   --color-destructive-border: #fecaca;
   --color-success: #059669;
   --color-success-bg: #ecfdf5;
-  --color-ring: #2563eb;
+  --color-ring: #f59e0b;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Calistoga', 'Inter', system-ui, -apple-system, sans-serif;
 
   --space-1: 4px;
   --space-2: 8px;
