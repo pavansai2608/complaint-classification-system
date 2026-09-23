@@ -127,7 +127,10 @@ def main():
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     report_path = EVAL_DIR / f"report_{timestamp}.txt"
-    report_path.write_text("\n".join(lines))
+    # A reply can contain characters (e.g. a narrow no-break space) outside
+    # the default Windows codepage - write_text must default to that
+    # codepage unless told otherwise, so it needs an explicit encoding.
+    report_path.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))
     print(f"\nSaved report to {report_path}")
 

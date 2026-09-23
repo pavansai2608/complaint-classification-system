@@ -1,0 +1,23 @@
+Suggested-reply evaluation - 2026-09-23T15:34:32.371839
+Prompt version: v1, model: gemini-3.6-flash
+Average score: 5.00/5 across 5 samples
+
+Sample 1 (billing, Medium) - source=groq, score=5/5
+  Reply: Thank you for bringing this to our attention. I’m sorry to hear that you were billed twice for the same order last week. I’ve flagged the duplicate charge for review and will follow up with you shortly regarding the next steps.
+
+Sample 2 (delivery, High) - source=groq, score=5/5
+  Reply: We’re very sorry to hear that your package was left out in the rain and arrived damaged. We understand how frustrating this must be, and we appreciate you bringing it to our attention. Our team will investigate what happened with the delivery and will follow up with you shortly regarding the next steps.
+
+Sample 3 (product, Low) - source=groq, score=5/5
+  Reply: We’re sorry to hear that your item arrived with a cracked screen and missing parts. We understand how disappointing this must be, and we’ll look into the situation right away. A member of our team will be in touch shortly to discuss the next steps.
+
+Sample 4 (billing, Urgent) - source=gemini, score=5/5
+  Reply: Dear Customer,
+
+Thank you for reaching out to our support team regarding the potential fraudulent activity on your account. We understand your concern and take matters of account security very seriously. Our team is actively reviewing your billing details, and a representative will follow up with you shortly to assist with this matter.
+
+Sincerely,  
+Customer Support Team
+
+Sample 5 (delivery, Medium) - source=groq, score=5/5
+  Reply: Thank you for reaching out. I’ve checked on your order and can confirm that it is currently being processed and on schedule for delivery. I’ll keep you updated with any further details, and please let us know if you have any additional questions.
