@@ -17,7 +17,10 @@ class ComplaintSubmissionTests(BaseE2ETest):
 
         self.wait_for_path("/customer")
         confirmation = self.find_visible((By.CSS_SELECTOR, "[role='status']"))
-        self.assertIn("Complaint submitted", confirmation.text)
+        # Selenium reads the rendered text, and the pill is styled uppercase
+        # via CSS - compare case-insensitively so a styling choice can't
+        # break this on its own.
+        self.assertIn("complaint submitted", confirmation.text.lower())
 
     def test_too_short_title_shows_error_and_stays_on_form(self):
         self.register_and_log_in()
