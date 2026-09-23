@@ -214,6 +214,21 @@
   gap: var(--space-3);
 }
 
+.hero-demo-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--space-4);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9375rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 200ms;
+}
+
+.hero-demo-link:hover {
+  color: #fff;
+}
+
 .btn-primary-lg {
   display: inline-flex;
   align-items: center;
@@ -1004,7 +1019,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--color-foreground);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 60px 60px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 60px 60px,
+    var(--color-foreground);
 }
 
 .page::before {
@@ -1015,7 +1033,7 @@
   border-radius: 50%;
   background: var(--color-primary);
   filter: blur(140px);
-  opacity: 0.08;
+  opacity: 0.14;
   top: -200px;
   left: -100px;
   pointer-events: none;
@@ -1029,7 +1047,7 @@
   border-radius: 50%;
   background: var(--color-accent);
   filter: blur(120px);
-  opacity: 0.06;
+  opacity: 0.12;
   bottom: -100px;
   right: -100px;
   pointer-events: none;
@@ -1303,6 +1321,21 @@
   margin: 0 0 var(--space-2);
   font-size: 1.0625rem;
   color: #6ee7b7;
+}
+
+.demo-banner {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.demo-badges {
+  margin-bottom: var(--space-4);
 }
 
 /* ========================================================================
