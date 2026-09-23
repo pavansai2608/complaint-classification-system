@@ -30,6 +30,7 @@ function Home() {
         <nav className="landing-nav">
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
+          <Link to="/demo">Live example</Link>
           <Link to="/about">About</Link>
         </nav>
         {ready && !user && (
@@ -80,6 +81,9 @@ function Home() {
               </Link>
             </div>
           )}
+          <Link to="/demo" className="hero-demo-link">
+            See a live example — no account needed
+          </Link>
         </div>
 
         <div className="hero-visual" aria-hidden="true">

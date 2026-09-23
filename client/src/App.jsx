@@ -14,6 +14,7 @@ import ComplaintDetail from './pages/ComplaintDetail'
 import AgentQueue from './pages/AgentQueue'
 import AgentComplaintDetail from './pages/AgentComplaintDetail'
 import About from './pages/About'
+import Demo from './pages/Demo'
 import NotFound from './pages/NotFound'
 import './App.css'
 
@@ -28,6 +29,7 @@ function AppRoutes() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
+          <Route path="/demo" element={<Demo />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<RoleRoute allow={['customer']} />}>

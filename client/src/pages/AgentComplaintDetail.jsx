@@ -100,11 +100,21 @@ function AgentComplaintDetail() {
         {complaint && (
           <>
             <h1>{complaint.title}</h1>
-            <StatusBadge status={complaint.status} />
+            <div className="complaint-card-badges demo-badges">
+              <StatusBadge status={complaint.status} />
+              {complaint.priority && (
+                <span className={`priority-badge priority-badge-${complaint.priority.toLowerCase()}`}>
+                  {complaint.priority}
+                </span>
+              )}
+            </div>
             <p className="lede">{complaint.description}</p>
             {complaint.orderReference && <p className="lede">Order reference: {complaint.orderReference}</p>}
 
             <div className="ai-analysis">
+              <p>
+                <strong>Category:</strong> {complaint.category || 'Not analyzed'}
+              </p>
               <p>
                 <strong>AI emotion:</strong>{' '}
                 {complaint.emotion?.label ? `${complaint.emotion.label} (${complaint.emotion.score})` : 'Not analyzed'}

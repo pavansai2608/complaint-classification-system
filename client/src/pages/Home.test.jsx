@@ -54,6 +54,13 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: /start for free/i })).toHaveAttribute('href', '/register')
   })
 
+  it('links to the live example so it can be seen without an account', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+    renderHome()
+    const demoLinks = await screen.findAllByRole('link', { name: /live example/i })
+    demoLinks.forEach((link) => expect(link).toHaveAttribute('href', '/demo'))
+  })
+
   it('redirects a logged-in user to their role page instead of showing this page', async () => {
     apiClient.post.mockImplementation((url) => {
       if (url === '/api/auth/refresh') {
