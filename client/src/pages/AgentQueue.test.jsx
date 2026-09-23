@@ -40,7 +40,7 @@ describe('AgentQueue', () => {
     expect(await screen.findByText('Charged twice')).toBeInTheDocument()
     expect(screen.getByText('Late delivery')).toBeInTheDocument()
     expect(screen.getByText('Urgent')).toBeInTheDocument()
-    expect(apiClient.get).toHaveBeenCalledWith('/api/agent/queue')
+    expect(apiClient.get).toHaveBeenCalledWith('/api/agent/queue', { params: { limit: 100 } })
   })
 
   it('renders an item saved before the priority field existed without crashing', async () => {
