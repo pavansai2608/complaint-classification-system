@@ -20,10 +20,10 @@ describe('Demo', () => {
     expect(screen.getByText('negative (0.87)', { exact: false })).toBeInTheDocument()
   })
 
-  it('shows both the AI draft and the reply an agent actually sent', () => {
+  it('shows both the AI draft and the reply a person actually sent', () => {
     renderPage()
     expect(screen.getByText('Suggested reply (AI draft):', { exact: false })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Reply from support (sent by an agent)' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Reply from support (written and sent by a person)' })).toBeInTheDocument()
   })
 
   it('does not require an account to view it', () => {

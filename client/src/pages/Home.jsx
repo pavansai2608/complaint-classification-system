@@ -1,238 +1,161 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { roleHomePath } from '../utils/roles'
+import useLandingMotion from '../hooks/useLandingMotion'
+
+// The headline is animated a word at a time, so it is written as lines.
+const HEADLINE_LINES = ['Report a problem.', 'We sort out', 'the rest.']
+
+// Sample complaints, shown so a visitor can see what the app actually does
+// before signing up. Static, because a signed-out visitor has no data.
+const EXAMPLES = [
+  { subject: 'Charged twice for order #4821', kind: 'Billing', rank: 'Urgent' },
+  { subject: 'Wrong item delivered, needs replacing', kind: 'Delivery', rank: 'High' },
+  { subject: 'Settings page will not load', kind: 'Product', rank: 'Medium' },
+  { subject: 'Refund not credited after nine days', kind: 'Billing', rank: 'High' },
+]
+
+const STEPS = [
+  {
+    head: 'You describe the problem',
+    body: 'Write it in your own words. There is no form to work out and no category to guess at.',
+  },
+  {
+    head: 'It gets sorted automatically',
+    body: 'Your complaint is read and given a category and a priority, so the most urgent ones reach the support team first.',
+  },
+  {
+    head: 'A person replies',
+    body: 'Someone on the support team reads your complaint and writes the answer themselves. You can follow the status the whole way through.',
+  },
+]
 
 function Home() {
-  const [serverStatus, setServerStatus] = useState('checking')
   const { user, ready } = useAuth()
+  const scopeRef = useRef(null)
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Bad response'))))
-      .then((data) => setServerStatus(data.status === 'ok' ? 'ok' : 'down'))
-      .catch(() => setServerStatus('down'))
-  }, [])
+  useLandingMotion(scopeRef)
 
   if (ready && user) {
     return <Navigate to={roleHomePath(user.role)} replace />
   }
 
   return (
-    <div className="landing">
-      <header className="landing-header">
+    <div className="docket" ref={scopeRef}>
+      <header className="docket-head">
         <span className="brand">
           <span className="brand-mark" aria-hidden="true">
             CR
           </span>
-          Complaint Resolution System
+          <span className="brand-words">Complaint Resolution</span>
         </span>
-        <nav className="landing-nav">
-          <a href="#features">Features</a>
+        <nav className="docket-nav">
           <a href="#how-it-works">How it works</a>
           <Link to="/demo">Live example</Link>
           <Link to="/about">About</Link>
         </nav>
         {ready && !user && (
-          <div className="landing-header-actions">
-            <Link to="/login" className="btn-ghost">
+          <div className="docket-head-actions">
+            <Link to="/login" className="link-plain">
               Log in
             </Link>
-            <Link to="/register" className="btn-primary-sm">
-              Get started
+            <Link to="/register" className="btn-ink">
+              Create account
             </Link>
           </div>
         )}
       </header>
 
-      <section className="hero">
-        <div className="hero-bg" aria-hidden="true">
-          <div className="hero-orb hero-orb-1" />
-          <div className="hero-orb hero-orb-2" />
-          <div className="hero-orb hero-orb-3" />
-          <div className="hero-grid" />
-        </div>
+      <main>
+        <section className="masthead">
+          <div className="masthead-body">
+            <div className="masthead-copy">
+              <h1 className="display">
+                {HEADLINE_LINES.map((line, lineIndex) => (
+                  <Fragment key={line}>
+                    <span className="line">
+                      {line.split(' ').map((word, i, words) => (
+                        <Fragment key={word + i}>
+                          <span className="word">{word}</span>
+                          {i < words.length - 1 ? ' ' : null}
+                        </Fragment>
+                      ))}
+                    </span>
+                    {/* Lines are block-level, so this space is invisible,
+                        but without it the text runs together for a screen
+                        reader. */}
+                    {lineIndex < HEADLINE_LINES.length - 1 ? ' ' : null}
+                  </Fragment>
+                ))}
+              </h1>
 
-        <div className="hero-content">
-          <span className="status-pill">
-            <span className={`status-dot ${serverStatus}`} aria-hidden="true" />
-            Server status: <strong data-testid="server-status">{serverStatus}</strong>
-          </span>
+              <p className="standfirst">
+                Raise a complaint in your own words and follow it through to an answer. Every one is
+                read as soon as it arrives and passed to the right person, so the problems that
+                matter most do not sit at the bottom of a pile.
+              </p>
 
-          <h1 className="hero-title">
-            Resolve complaints<br />
-            <span className="hero-gradient-text">before they escalate.</span>
-          </h1>
-          <p className="hero-subtitle">
-            Raise a complaint, track where it stands, and get a resolution — all from one place.
-            Powered by intelligent triage that routes every issue to the right person.
-          </p>
+              {ready && !user && (
+                <p className="masthead-actions">
+                  <Link to="/register" className="btn-ink btn-ink-lg">
+                    Create an account
+                  </Link>
+                  <Link to="/demo" className="link-underline">
+                    See a live example — no account needed
+                  </Link>
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
 
+        <section className="register" aria-label="Example complaints">
+          <h2 className="section-heading">What the support team sees</h2>
+          <ul className="example-list">
+            {EXAMPLES.map((row) => (
+              <li key={row.subject} className="entry">
+                <span className="entry-subject">{row.subject}</span>
+                <span className="entry-meta">
+                  <span className="entry-kind">{row.kind}</span>
+                  <span className={`rank rank-${row.rank.toLowerCase()}`}>{row.rank}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="clauses" id="how-it-works">
+          <h2 className="section-heading">How it works</h2>
+          <ol className="clause-list">
+            {STEPS.map((c, i) => (
+              <li className="clause" key={c.head}>
+                <span className="clause-n" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <div>
+                  <h3>{c.head}</h3>
+                  <p>{c.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="colophon">
+          <h2>Something to report?</h2>
           {ready && !user && (
-            <div className="hero-actions">
-              <Link to="/register" className="btn-primary-lg">
-                Start for free
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            <p className="masthead-actions">
+              <Link to="/register" className="btn-ink btn-ink-lg">
+                Create an account
               </Link>
-              <Link to="/login" className="btn-outline-lg">
-                Log in to your account
+              <Link to="/demo" className="link-underline">
+                Or look around first
               </Link>
-            </div>
+            </p>
           )}
-          <Link to="/demo" className="hero-demo-link">
-            See a live example — no account needed
-          </Link>
-        </div>
-
-        <div className="hero-visual" aria-hidden="true">
-          <div className="hero-card-stack">
-            <div className="hero-mock-card hero-mock-card-1">
-              <div className="mock-dot mock-dot-urgent" />
-              <span>Payment not received for order #4821</span>
-              <span className="mock-badge mock-badge-urgent">Urgent</span>
-            </div>
-            <div className="hero-mock-card hero-mock-card-2">
-              <div className="mock-dot mock-dot-high" />
-              <span>Wrong item delivered — need replacement</span>
-              <span className="mock-badge mock-badge-high">High</span>
-            </div>
-            <div className="hero-mock-card hero-mock-card-3">
-              <div className="mock-dot mock-dot-medium" />
-              <span>Account settings page not loading</span>
-              <span className="mock-badge mock-badge-medium">Medium</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="features" id="features">
-        <div className="section-inner">
-          <span className="section-label">Features</span>
-          <h2 className="section-title">Everything you need to manage complaints</h2>
-          <p className="section-subtitle">
-            From submission to resolution, every step is tracked, triaged, and transparent.
-          </p>
-
-          <div className="feature-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Intelligent triage</h3>
-              <p>Every complaint is automatically classified by category, sentiment, and urgency — agents see the most critical issues first.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Suggested replies</h3>
-              <p>Each complaint comes with a draft response agents can review, edit, and send — cutting reply time in half.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Real-time tracking</h3>
-              <p>Customers see live status updates from the moment they submit a complaint until it is resolved.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Role-based access</h3>
-              <p>Customers, agents, and admins each see only what they need — permissions are enforced server-side on every request.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Dashboard analytics</h3>
-              <p>Admins get a bird's-eye view of complaint volume, category distribution, and resolution times.</p>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Google Sign-In</h3>
-              <p>One-click login with your Google account — no passwords to remember, no forms to fill.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="how-it-works" id="how-it-works">
-        <div className="section-inner">
-          <span className="section-label">How it works</span>
-          <h2 className="section-title">Three steps to resolution</h2>
-
-          <div className="steps-grid">
-            <div className="step-card">
-              <span className="step-number">01</span>
-              <h3>Submit</h3>
-              <p>Describe the problem. The system analyses it instantly and assigns a category, priority, and suggested reply.</p>
-            </div>
-            <div className="step-connector" aria-hidden="true">
-              <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
-                <path d="M0 8h36M30 2l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div className="step-card">
-              <span className="step-number">02</span>
-              <h3>Triage</h3>
-              <p>An agent reviews the complaint and the draft reply, edits it if needed, and sends the response.</p>
-            </div>
-            <div className="step-connector" aria-hidden="true">
-              <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
-                <path d="M0 8h36M30 2l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div className="step-card">
-              <span className="step-number">03</span>
-              <h3>Resolve</h3>
-              <p>The customer sees the reply and updated status. The complaint is closed and logged for analytics.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="cta-section">
-        <div className="section-inner">
-          <div className="cta-card">
-            <h2>Ready to streamline your complaints?</h2>
-            <p>Create a free account and submit your first complaint in under a minute.</p>
-            {ready && !user && (
-              <div className="hero-actions">
-                <Link to="/register" className="btn-primary-lg">
-                  Get started free
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
   )
 }

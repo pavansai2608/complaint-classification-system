@@ -39,8 +39,8 @@ function Demo() {
       <main className="home-hero demo-page">
         <p className="demo-banner">
           Live example — no account needed. This is exactly what a real complaint looks like after it has gone
-          through the pipeline: automatic category, emotion, priority, an AI-drafted reply, and the version an agent
-          actually sent.
+          through the pipeline: automatic category, emotion, priority, an AI-drafted reply, and the version a
+          person on the support team actually sent.
         </p>
 
         <h1>{SAMPLE.title}</h1>
@@ -69,7 +69,7 @@ function Demo() {
         </div>
 
         <div className="agent-reply">
-          <h2>Reply from support (sent by an agent)</h2>
+          <h2>Reply from support (written and sent by a person)</h2>
           <p className="lede">{SAMPLE.agentReply}</p>
         </div>
 

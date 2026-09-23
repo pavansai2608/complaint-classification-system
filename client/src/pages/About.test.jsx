@@ -17,11 +17,11 @@ describe('About', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'About this app' })).toBeInTheDocument()
   })
 
-  it('explains the customer, sorting and agent parts', () => {
+  it('explains the customer, sorting and support team parts', () => {
     renderPage()
     expect(screen.getByRole('heading', { name: 'For customers' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'How complaints are sorted' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'For agents' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'For the support team' })).toBeInTheDocument()
   })
 
   it('links to sign up and log in', () => {

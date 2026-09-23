@@ -32,26 +32,15 @@ describe('Home', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows "ok" when the server health check passes', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'ok' }) })),
-    )
-    renderHome()
-    expect(await screen.findByText('ok')).toBeInTheDocument()
-  })
-
-  it('shows "down" when the server cannot be reached', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('Network error'))))
-    renderHome()
-    expect(await screen.findByText('down')).toBeInTheDocument()
-  })
-
   it('shows log in and register links when no one is logged in', async () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     renderHome()
     expect(await screen.findByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login')
-    expect(screen.getByRole('link', { name: /start for free/i })).toHaveAttribute('href', '/register')
+    // The page offers this twice, at the top and at the foot; both go to
+    // the same place.
+    const registerLinks = screen.getAllByRole('link', { name: /create an account/i })
+    expect(registerLinks.length).toBeGreaterThan(0)
+    registerLinks.forEach((link) => expect(link).toHaveAttribute('href', '/register'))
   })
 
   it('links to the live example so it can be seen without an account', async () => {

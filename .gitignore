@@ -20,3 +20,8 @@ k8s/secret.yaml
 
 # OS
 .DS_Store
+
+# Local MCP server config - contains no secrets (key comes from an env var)
+# but stays local so it does not affect anyone else working on this repo.
+.mcp.json
+.claude/launch.json

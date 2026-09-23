@@ -25,7 +25,7 @@ function About() {
           <p className="lede">
             Create an account, then submit a complaint with a title, a description and, if you have one, an order
             reference. You can follow each complaint on your own page. It shows whether it is Open, In Progress or
-            Resolved, and it shows the reply from support once an agent has answered.
+            Resolved, and it shows the reply from support once someone on the team has answered.
           </p>
         </section>
 
@@ -39,11 +39,11 @@ function About() {
         </section>
 
         <section className="about-section">
-          <h2>For agents</h2>
+          <h2>For the support team</h2>
           <p className="lede">
-            Agents see open complaints with the highest priority first. For each one they can check the automatic
-            analysis, fix the category or priority if it is wrong, edit the suggested reply and send it. The suggested
-            reply is only a draft. A person always reads it before it is sent.
+            The support team sees open complaints with the highest priority first. For each one they can check the
+            automatic analysis, fix the category or priority if it is wrong, edit the suggested reply and send it. The
+            suggested reply is only a draft. A person always reads it before it is sent.
           </p>
         </section>
 

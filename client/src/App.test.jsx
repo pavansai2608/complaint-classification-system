@@ -21,7 +21,7 @@ describe('App', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
     window.history.pushState({}, '', '/')
     render(<App />)
-    expect(screen.getByRole('heading', { name: /resolve complaints/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /report a problem/i })).toBeInTheDocument()
   })
 
   it('shows the register page at /register', () => {

@@ -1,32 +1,97 @@
-@import url('https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* ========================================================================
+   design system
+
+   Warm and high-contrast. The app is something people open when they are
+   already annoyed - a complaint is a bad day - so it is warm rather than
+   technical: a warm ivory ground, a deep forest band it alternates with,
+   apricot for anything you can act on, generous rounding and soft shadows.
+
+   No black page, no dark mode, no cold corporate white, no indigo or
+   violet, no gradient fills.
+   ======================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Warm amber + purple on near-black - a deliberate departure from the
-     generic blue-SaaS palette. On-primary is dark, not white: amber doesn't
-     have enough contrast against white text to pass WCAG AA. */
-  --color-primary: #f59e0b;
-  --color-primary-hover: #d97706;
-  --color-primary-light: #fef3c7;
-  --color-on-primary: #1c1305;
-  --color-accent: #8b5cf6;
-  --color-accent-light: #ede9fe;
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-card: #ffffff;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-border: #e2e8f0;
-  --color-destructive: #dc2626;
-  --color-destructive-bg: #fef2f2;
-  --color-destructive-border: #fecaca;
-  --color-success: #059669;
-  --color-success-bg: #ecfdf5;
-  --color-ring: #f59e0b;
+  /* --- Ground ---------------------------------------------------------
+     Warm ivory, not white. The page alternates between this and a deep
+     forest block, so the eye moves through contrasting bands instead of
+     scrolling down one uninterrupted sheet - which is most of what makes
+     a long page feel designed rather than generated. */
+  --color-background: #fbf7f0;
   --color-surface: #ffffff;
-  --color-surface-elevated: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f4eee3;
+  --color-surface-tint: #ece4d6;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Calistoga', 'Inter', system-ui, -apple-system, sans-serif;
+  /* The dark band and what sits on it. */
+  --color-inverse: #123d34;
+  --color-inverse-deep: #0d2e28;
+  --color-on-inverse: #f6efe2;
+  --color-on-inverse-muted: #a7c4b8;
+
+  /* --- Ink -------------------------------------------------------------
+     One deep teal-slate anchors every piece of text. Never pure black -
+     black on white is the harshest pairing there is. */
+  --color-foreground: #1a2e26;
+  --color-muted-foreground: #5b6f65;
+  --color-faint-foreground: #8a9a90;
+
+  --color-border: #e5dccd;
+  --color-border-strong: #d2c5b0;
+
+  /* --- Primary ---------------------------------------------------------
+     Apricot. Warm, high-energy and legible against both the ivory and the
+     forest band, which a green primary never was. */
+  --color-primary: #e2703a;
+  --color-primary-hover: #cc5c28;
+  --color-primary-muted: #fbe7da;
+  --color-on-primary: #ffffff;
+  --color-ring: #e2703a;
+
+  /* --- Accent ----------------------------------------------------------
+     Warm coral, kept back for urgency and highlights so it keeps meaning. */
+  --color-accent: #e9694a;
+  --color-accent-muted: #fdeee9;
+
+  /* --- Data ------------------------------------------------------------
+     Only ever encodes a value, never decoration. */
+  --color-urgent: #d8503a;
+  --color-high: #d98226;
+  --color-medium: #b8952c;
+  --color-low: #3d9b74;
+  --color-success: #2f8f68;
+  --color-success-bg: #e4f2eb;
+  --color-destructive: #c8462f;
+  --color-destructive-bg: #fdeeea;
+  --color-destructive-border: #f3c9bf;
+
+  /* Aliases kept so older rules still resolve. */
+  --color-card: var(--color-surface);
+  --color-muted: var(--color-surface-sunken);
+  --color-primary-light: var(--color-primary-muted);
+  --color-accent-light: var(--color-accent-muted);
+  --color-surface-elevated: var(--color-surface);
+
+  /* --- Type ------------------------------------------------------------
+     Plus Jakarta Sans is rounder and warmer than the usual UI grotesk.
+     Fraunces appears only at display sizes with its SOFT axis turned up,
+     which is literally an axis for making the letterforms friendlier.
+     DM Mono for anything that is a number or an identifier. */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.75rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -40,22 +105,30 @@
   --space-12: 80px;
   --space-16: 128px;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  /* Generously rounded. Soft corners are what make an interface feel
+     approachable rather than administrative. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.15);
+  /* Soft, wide and very light - the shadow of something resting on paper,
+     not a drop shadow. Warm-tinted so it sits in the palette. */
+  --shadow-xs: 0 1px 2px rgba(23, 49, 44, 0.05);
+  --shadow-sm: 0 2px 6px rgba(23, 49, 44, 0.06);
+  --shadow-md: 0 6px 18px rgba(23, 49, 44, 0.07);
+  --shadow-lg: 0 14px 38px rgba(23, 49, 44, 0.09);
+  --shadow-xl: 0 26px 60px rgba(23, 49, 44, 0.11);
+  --shadow-glow: none;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
 }
 
 body {
@@ -63,7 +136,7 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -73,14 +146,30 @@ a {
   color: var(--color-primary);
 }
 
+.tnum,
+table,
+time {
+  font-variant-numeric: tabular-nums;
+}
+
 ::selection {
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-primary-muted);
+  color: var(--color-foreground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition-duration: 0.01ms !important;
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
