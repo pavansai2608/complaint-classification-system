@@ -45,6 +45,49 @@ describe('ComplaintDetail', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/api/complaints/507f1f77bcf86cd799439011')
   })
 
+  it('shows the AI classification once analysis has finished', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      data: {
+        complaint: {
+          id: '507f1f77bcf86cd799439011',
+          title: 'Order arrived damaged',
+          description: 'The package arrived with a cracked screen.',
+          status: 'Open',
+          category: 'shipping',
+          priority: 'High',
+          emotion: { label: 'negative', score: 0.8 },
+          analysisPending: false,
+        },
+      },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('Analyzed automatically when you submitted this')).toBeInTheDocument()
+    expect(screen.getByText('shipping')).toBeInTheDocument()
+    expect(screen.getByText('negative')).toBeInTheDocument()
+    expect(screen.getByText('High priority')).toBeInTheDocument()
+  })
+
+  it('shows a pending message while analysis has not finished yet', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      data: {
+        complaint: {
+          id: '507f1f77bcf86cd799439011',
+          title: 'Order arrived damaged',
+          description: 'The package arrived with a cracked screen.',
+          status: 'Open',
+          analysisPending: true,
+        },
+      },
+    })
+
+    renderPage()
+
+    expect(await screen.findByText(/still analyzing this complaint/)).toBeInTheDocument()
+    expect(screen.queryByText('Analyzed automatically when you submitted this')).not.toBeInTheDocument()
+  })
+
   it('shows the agent reply once one has been sent', async () => {
     apiClient.get.mockResolvedValueOnce({
       data: {

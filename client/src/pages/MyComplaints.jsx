@@ -39,6 +39,9 @@ function MyComplaints() {
           </span>
           Complaint Resolution System
         </Link>
+        <Link to="/about" className="top-bar-about-link">
+          About
+        </Link>
       </header>
 
       <main className="home-hero">

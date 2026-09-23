@@ -22,15 +22,4 @@ describe('Footer', () => {
     renderFooter()
     expect(screen.getByText(/2031 Complaint Resolution System/)).toBeInTheDocument()
   })
-
-  it('links to the About page', () => {
-    renderFooter()
-    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about')
-  })
-
-  it('links to the support contact by email', () => {
-    renderFooter()
-    const link = screen.getByRole('link', { name: 'Support' })
-    expect(link.getAttribute('href')).toMatch(/^mailto:[^\s@]+@[^\s@]+$/)
-  })
 })

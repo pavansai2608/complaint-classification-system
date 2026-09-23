@@ -43,6 +43,9 @@ function ComplaintDetail() {
           </span>
           Complaint Resolution System
         </Link>
+        <Link to="/about" className="top-bar-about-link">
+          About
+        </Link>
       </header>
 
       <main className="home-hero">
@@ -59,11 +62,34 @@ function ComplaintDetail() {
         {complaint && (
           <>
             <h1>{complaint.title}</h1>
-            <StatusBadge status={complaint.status} />
+            <div className="complaint-card-badges demo-badges">
+              <StatusBadge status={complaint.status} />
+              {complaint.priority && (
+                <span className={`priority-badge priority-badge-${complaint.priority.toLowerCase()}`}>
+                  {complaint.priority} priority
+                </span>
+              )}
+            </div>
             <p className="lede">{complaint.description}</p>
             {complaint.orderReference && (
               <p className="lede">Order reference: {complaint.orderReference}</p>
             )}
+
+            {!complaint.analysisPending && complaint.category && (
+              <div className="ai-analysis">
+                <p className="ai-analysis-label">Analyzed automatically when you submitted this</p>
+                <p>
+                  <strong>Category:</strong> {complaint.category}
+                </p>
+                <p>
+                  <strong>Detected tone:</strong> {complaint.emotion?.label || 'neutral'}
+                </p>
+              </div>
+            )}
+            {complaint.analysisPending && (
+              <p className="lede">We&rsquo;re still analyzing this complaint - an agent will pick it up shortly.</p>
+            )}
+
             {complaint.agentReply && (
               <div className="agent-reply">
                 <h2>Reply from support</h2>

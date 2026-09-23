@@ -26,6 +26,6 @@ describe('Layout', () => {
   it('shows the footer on every page it wraps', () => {
     renderAt('/two')
     expect(screen.getByText('Page two')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
   })
 })

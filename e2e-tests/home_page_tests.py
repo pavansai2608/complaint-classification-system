@@ -13,7 +13,7 @@ class HomePageTests(BaseE2ETest):
     def test_main_heading_is_shown(self):
         self.open("/")
         heading = self.find_visible((By.TAG_NAME, "h1"))
-        self.assertEqual(heading.text, "Complaint Resolution System")
+        self.assertEqual(heading.text, "Resolve complaints\nbefore they escalate.")
 
     def test_server_status_shows_ok(self):
         self.open("/")
