@@ -44,6 +44,29 @@ describe('NewComplaint', () => {
     })
   })
 
+  it('fills the title and description with an example on click', () => {
+    renderPage()
+
+    expect(screen.getByLabelText('Title')).toHaveValue('')
+    fireEvent.click(screen.getByRole('button', { name: 'Try with an example' }))
+
+    expect(screen.getByLabelText('Title')).not.toHaveValue('')
+    expect(screen.getByLabelText('Description')).not.toHaveValue('')
+  })
+
+  it('does not show the same example twice in a row', () => {
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try with an example' }))
+    const first = screen.getByLabelText('Title').value
+
+    for (let i = 0; i < 20; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: 'Try with an example' }))
+      expect(screen.getByLabelText('Title').value).not.toBe(first)
+      break
+    }
+  })
+
   it('shows field errors returned by the API', async () => {
     const err = new Error('validation failed')
     err.response = {
