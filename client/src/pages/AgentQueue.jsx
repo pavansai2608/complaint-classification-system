@@ -16,7 +16,7 @@ function AgentQueue() {
   useEffect(() => {
     let cancelled = false
     apiClient
-      .get('/api/agent/queue')
+      .get('/api/agent/queue', { params: { limit: 100 } })
       .then((res) => {
         if (!cancelled) setItems(res.data.items)
       })
