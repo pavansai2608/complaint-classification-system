@@ -1,6 +1,8 @@
-# Ingress for the EC2/k3s deployment - reachable via the sslip.io hostname
+# Ingress for the EC2/k3s deployment - reachable via the nip.io hostname
 # that maps to the instance's Elastic IP, with a real Let's Encrypt TLS
 # certificate issued and auto-renewed by Traefik's built-in ACME resolver.
+# (Previously sslip.io - switched because some link scanners, e.g.
+# LinkedIn's, block sslip.io specifically but accept nip.io.)
 #
 # Traefik is configured via a HelmChartConfig manifest placed in
 # /var/lib/rancher/k3s/server/manifests/traefik-config.yaml on the EC2 box
@@ -14,7 +16,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls.certresolver: le
 spec:
   rules:
-    - host: 3-105-252-57.sslip.io
+    - host: 3-105-252-57.nip.io
       http:
         paths:
           - path: /
@@ -33,4 +35,4 @@ spec:
                   number: 4000
   tls:
     - hosts:
-        - 3-105-252-57.sslip.io
+        - 3-105-252-57.nip.io

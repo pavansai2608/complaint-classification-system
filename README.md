@@ -150,7 +150,7 @@ sudo docker build -t complaint-ai-service:local ./ai-service
 sudo docker save complaint-server:local complaint-client:local complaint-ai-service:local | sudo k3s ctr images import -
 ```
 
-**HTTPS.** The deployment uses [sslip.io](https://sslip.io) to get a free hostname (`<ip-with-dashes>.sslip.io`) that resolves to the Elastic IP, and Traefik's built-in ACME resolver issues a real Let's Encrypt certificate for it — no browser warnings, auto-renewed. The Traefik config is applied by the Jenkinsfile during deploy, or can be placed manually:
+**HTTPS.** The deployment uses [nip.io](https://nip.io) to get a free hostname (`<ip-with-dashes>.nip.io`) that resolves to the Elastic IP, and Traefik's built-in ACME resolver issues a real Let's Encrypt certificate for it — no browser warnings, auto-renewed. The Traefik config is applied by the Jenkinsfile during deploy, or can be placed manually:
 
 ```bash
 sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml <<'EOF'
@@ -183,7 +183,7 @@ sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.ya
 sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
 ```
 
-Open `https://<ip-with-dashes>.sslip.io` — the browser will show the padlock with no warnings. Check pods with `sudo k3s kubectl get pods` - all should be `Running`.
+Open `https://<ip-with-dashes>.nip.io` — the browser will show the padlock with no warnings. Check pods with `sudo k3s kubectl get pods` - all should be `Running`.
 
 **Cost.** Stopping the instance (`aws ec2 stop-instances --instance-ids <id>`) when it's not being used or demoed costs almost nothing (just the EBS disk, a couple of dollars a month) - only a running instance is billed for compute. The Elastic IP stays attached across stop/start, so nothing needs reconfiguring when you start it again.
 

@@ -5,7 +5,7 @@ metadata:
 data:
   # server
   PORT: "4000"
-  CLIENT_ORIGIN: "https://3-105-252-57.sslip.io"
+  CLIENT_ORIGIN: "https://3-105-252-57.nip.io"
   # MONGODB_URI now carries credentials, so it lives in the Secret instead.
   AI_SERVICE_URL: "http://ai-service:8000"
   # Higher than the 5s used for local dev: in the cluster the ai-service is
