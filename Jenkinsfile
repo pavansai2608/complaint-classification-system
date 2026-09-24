@@ -232,9 +232,9 @@ TRAEFIKCFG
                         python3 -m venv .venv
                         . .venv/bin/activate
                         pip install --no-cache-dir -r requirements.txt
-                        SSLIP_HOST=$(echo $EC2_HOST | tr '.' '-').sslip.io
-                        CLIENT_BASE_URL=https://$SSLIP_HOST \
-                        SERVER_BASE_URL=https://$SSLIP_HOST \
+                        DEPLOY_HOST=$(echo $EC2_HOST | tr '.' '-').nip.io
+                        CLIENT_BASE_URL=https://$DEPLOY_HOST \
+                        SERVER_BASE_URL=https://$DEPLOY_HOST \
                             python -m unittest discover -p "*_tests.py" -v
                     '''
                 }
