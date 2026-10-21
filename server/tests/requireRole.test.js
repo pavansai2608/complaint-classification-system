@@ -5,7 +5,7 @@ function mockRes() {
 }
 
 describe('requireRole', () => {
-  it.each(['customer', 'agent'])('lets a %s through when they are on the allowed list', (role) => {
+  it.each(['customer', 'agent', 'admin'])('lets a %s through when they are on the allowed list', (role) => {
     const req = { user: { id: '1', role } };
     const next = jest.fn();
 

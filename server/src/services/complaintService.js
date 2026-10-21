@@ -133,6 +133,18 @@ async function getAgentQueue({ status, category, page, limit } = {}) {
   return { items, total, page: currentPage, limit: pageSize };
 }
 
+async function getComplaintSummary() {
+  const rows = await Complaint.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+  const countFor = (status) => rows.find((row) => row._id === status)?.count || 0;
+
+  return {
+    total: rows.reduce((sum, row) => sum + row.count, 0),
+    open: countFor('Open'),
+    inProgress: countFor('In Progress'),
+    resolved: countFor('Resolved'),
+  };
+}
+
 module.exports = {
   createComplaint,
   listComplaintsForCustomer,
@@ -141,4 +153,5 @@ module.exports = {
   updateComplaintStatus,
   sendComplaintReply,
   getAgentQueue,
+  getComplaintSummary,
 };

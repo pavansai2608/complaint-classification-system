@@ -15,6 +15,7 @@ const {
   updateComplaintStatus,
   sendComplaintReply,
   getComplaintById,
+  getComplaintSummary,
 } = require('../src/services/complaintService');
 
 // A minimal stand-in for a mongoose document: plain fields plus a save()
@@ -271,5 +272,25 @@ describe('getComplaintById', () => {
 
     expect(result).toEqual({ id: 'complaint-1' });
     expect(Complaint.findById).toHaveBeenCalledWith('complaint-1');
+  });
+});
+
+describe('getComplaintSummary', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  it('counts complaints by status', async () => {
+    Complaint.aggregate.mockResolvedValueOnce([
+      { _id: 'Open', count: 4 },
+      { _id: 'In Progress', count: 2 },
+      { _id: 'Resolved', count: 5 },
+    ]);
+
+    await expect(getComplaintSummary()).resolves.toEqual({ total: 11, open: 4, inProgress: 2, resolved: 5 });
+  });
+
+  it('reports zero for a status with no complaints yet', async () => {
+    Complaint.aggregate.mockResolvedValueOnce([{ _id: 'Open', count: 1 }]);
+
+    await expect(getComplaintSummary()).resolves.toEqual({ total: 1, open: 1, inProgress: 0, resolved: 0 });
   });
 });
