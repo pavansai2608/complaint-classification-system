@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import AdminSummary from '../components/AdminSummary'
 
 const ROLE_CONTENT = {
   customer: {
@@ -9,6 +10,10 @@ const ROLE_CONTENT = {
   agent: {
     title: 'Priority queue',
     lede: 'Review complaints sorted by priority, check the AI analysis, and send replies.',
+  },
+  admin: {
+    title: 'Admin overview',
+    lede: 'How many complaints have come in, and how many are still being worked on.',
   },
 }
 
@@ -43,6 +48,8 @@ function RoleHome() {
             Complaint submitted
           </p>
         )}
+
+        {user.role === 'admin' && <AdminSummary />}
 
         <div className="home-actions">
           {user.role === 'customer' && (

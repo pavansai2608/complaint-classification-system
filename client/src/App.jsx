@@ -43,6 +43,9 @@ function AppRoutes() {
               <Route path="/agent/queue" element={<AgentQueue />} />
               <Route path="/agent/complaints/:id" element={<AgentComplaintDetail />} />
             </Route>
+            <Route element={<RoleRoute allow={['admin']} />}>
+              <Route path="/admin" element={<RoleHome />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<NotFound />} />

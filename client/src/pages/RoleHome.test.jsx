@@ -7,7 +7,7 @@ import ProtectedRoute from '../routes/ProtectedRoute.jsx'
 import RoleHome from './RoleHome.jsx'
 
 vi.mock('../api/client', () => ({
-  default: { post: vi.fn(), defaults: { headers: { common: {} } } },
+  default: { post: vi.fn(), get: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
 function renderAsRole(role) {
@@ -25,6 +25,7 @@ function renderAsRole(role) {
           <Route element={<ProtectedRoute />}>
             <Route path="/agent" element={<RoleHome />} />
             <Route path="/customer" element={<RoleHome />} />
+            <Route path="/admin" element={<RoleHome />} />
           </Route>
         </Routes>
       </AuthProvider>
@@ -35,11 +36,14 @@ function renderAsRole(role) {
 describe('RoleHome', () => {
   beforeEach(() => {
     apiClient.post.mockReset()
+    apiClient.get.mockReset()
+    apiClient.get.mockResolvedValue({ data: { total: 7, open: 3, inProgress: 2, resolved: 2 } })
   })
 
   it.each([
     ['customer', 'Your complaints'],
     ['agent', 'Priority queue'],
+    ['admin', 'Admin overview'],
   ])('shows %s-specific content and the logged-in user', async (role, heading) => {
     renderAsRole(role)
 
@@ -62,5 +66,20 @@ describe('RoleHome', () => {
 
     await screen.findByText('Your complaints')
     expect(screen.queryByRole('link', { name: 'View priority queue' })).not.toBeInTheDocument()
+  })
+
+  it('shows complaint numbers to an admin', async () => {
+    renderAsRole('admin')
+
+    expect(await screen.findByText('All complaints')).toBeInTheDocument()
+    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(apiClient.get).toHaveBeenCalledWith('/api/admin/summary')
+  })
+
+  it('does not load admin numbers for an agent', async () => {
+    renderAsRole('agent')
+
+    await screen.findByText('Priority queue')
+    expect(apiClient.get).not.toHaveBeenCalled()
   })
 })
