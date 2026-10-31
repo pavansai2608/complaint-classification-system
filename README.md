@@ -1,4 +1,4 @@
-# Intelligent Customer Complaint Classification & Resolution System
+# Complaint Triage & Resolution System
 
 A web app where customers raise and track complaints, agents work through a priority queue and send replies, and admins see analytics on a dashboard. Each new complaint is automatically tagged with a category, sentiment, priority and a suggested reply.
 

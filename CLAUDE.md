@@ -1,5 +1,5 @@
 ## Project
-Intelligent Customer Complaint Classification & Resolution System.
+Complaint Triage & Resolution System.
 Users: customer (raises and tracks complaints), agent (sees queue by priority, sends replies), admin (dashboard and analytics).
 Flow: customer submits complaint → Express saves it → calls AI service → gets category, sentiment, priority, suggested reply → agent reviews, edits, sends reply → marks resolved.
 Deadline: early November 2026. Sprints are 2 weeks.
