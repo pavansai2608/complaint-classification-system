@@ -37,7 +37,19 @@ describe('RoleHome', () => {
   beforeEach(() => {
     apiClient.post.mockReset()
     apiClient.get.mockReset()
-    apiClient.get.mockResolvedValue({ data: { total: 7, open: 3, inProgress: 2, resolved: 2 } })
+    // The admin page loads two things: the totals and the chart numbers.
+    apiClient.get.mockImplementation((url) => {
+      if (url === '/api/admin/analytics') {
+        return Promise.resolve({
+          data: {
+            byCategory: [{ label: 'billing', count: 4 }],
+            byPriority: [{ label: 'Urgent', count: 4 }],
+            daily: [{ date: '2026-11-11', count: 4 }],
+          },
+        })
+      }
+      return Promise.resolve({ data: { total: 7, open: 3, inProgress: 2, resolved: 2 } })
+    })
   })
 
   it.each([
@@ -74,6 +86,13 @@ describe('RoleHome', () => {
     expect(await screen.findByText('All complaints')).toBeInTheDocument()
     expect(screen.getByText('7')).toBeInTheDocument()
     expect(apiClient.get).toHaveBeenCalledWith('/api/admin/summary')
+  })
+
+  it('shows the analytics charts to an admin', async () => {
+    renderAsRole('admin')
+
+    expect(await screen.findByRole('heading', { name: 'Complaints by category' })).toBeInTheDocument()
+    expect(apiClient.get).toHaveBeenCalledWith('/api/admin/analytics')
   })
 
   it('does not load admin numbers for an agent', async () => {
