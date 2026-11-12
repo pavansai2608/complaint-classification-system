@@ -1,4 +1,4 @@
-const { getComplaintSummary } = require('../services/complaintService');
+const { getComplaintSummary, getComplaintAnalytics } = require('../services/complaintService');
 
 async function summary(req, res, next) {
   try {
@@ -8,4 +8,12 @@ async function summary(req, res, next) {
   }
 }
 
-module.exports = { summary };
+async function analytics(req, res, next) {
+  try {
+    res.json(await getComplaintAnalytics());
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { summary, analytics };

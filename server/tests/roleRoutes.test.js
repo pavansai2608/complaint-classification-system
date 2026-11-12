@@ -24,7 +24,7 @@ const request = require('supertest');
 const { createApp } = require('../src/app');
 const { signAccessToken } = require('../src/services/tokenService');
 const { getCurrentUser } = require('../src/services/userService');
-const { getAgentQueue, getComplaintSummary } = require('../src/services/complaintService');
+const { getAgentQueue, getComplaintSummary, getComplaintAnalytics } = require('../src/services/complaintService');
 const { ApiError } = require('../src/utils/ApiError');
 
 const app = createApp({ clientOrigin: 'http://localhost:5173' });
@@ -82,6 +82,32 @@ describe('role-protected routes', () => {
     const res = await request(app).get('/api/admin/summary').set('Authorization', `Bearer ${tokenFor('admin')}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ total: 3, open: 1, inProgress: 1, resolved: 1 });
+  });
+
+  it('rejects /api/admin/analytics with no token', async () => {
+    const res = await request(app).get('/api/admin/analytics');
+    expect(res.status).toBe(401);
+    expect(getComplaintAnalytics).not.toHaveBeenCalled();
+  });
+
+  it.each(['customer', 'agent'])('blocks a %s from /api/admin/analytics', async (role) => {
+    getCurrentUser.mockResolvedValueOnce({ id: `${role}-id`, role });
+    const res = await request(app).get('/api/admin/analytics').set('Authorization', `Bearer ${tokenFor(role)}`);
+    expect(res.status).toBe(403);
+    expect(getComplaintAnalytics).not.toHaveBeenCalled();
+  });
+
+  it('lets an admin read /api/admin/analytics', async () => {
+    const analytics = {
+      byCategory: [{ label: 'billing', count: 2 }],
+      byPriority: [{ label: 'Urgent', count: 1 }],
+      daily: [{ date: '2026-11-11', count: 2 }],
+    };
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
+    getComplaintAnalytics.mockResolvedValueOnce(analytics);
+    const res = await request(app).get('/api/admin/analytics').set('Authorization', `Bearer ${tokenFor('admin')}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(analytics);
   });
 
   it('blocks an admin from the agent queue (admin is not a super-role)', async () => {
