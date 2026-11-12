@@ -145,6 +145,49 @@ async function getComplaintSummary() {
   };
 }
 
+const ANALYTICS_DAYS = 14;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Numbers for the admin charts. Takes no input from the request, so there is
+// nothing for a caller to tamper with. "now" is a parameter only so tests can
+// pin the date.
+async function getComplaintAnalytics(now = new Date()) {
+  // Midnight UTC on the first day of the window, so today counts as day 14.
+  const todayStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const since = new Date(todayStart - (ANALYTICS_DAYS - 1) * DAY_MS);
+
+  const [categoryRows, priorityRows, dailyRows] = await Promise.all([
+    Complaint.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
+    Complaint.aggregate([{ $group: { _id: '$priority', count: { $sum: 1 } } }]),
+    Complaint.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      // Groups by calendar day in UTC, e.g. "2026-11-05".
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  // A complaint has no category while the AI analysis is still pending.
+  const byCategory = categoryRows
+    .map((row) => ({ label: row._id || 'Not analysed yet', count: row.count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  // Always all four priorities in the same order, with zero for an empty one.
+  const byPriority = PRIORITY_ORDER.map((priority) => ({
+    label: priority,
+    count: priorityRows.find((row) => row._id === priority)?.count || 0,
+  }));
+
+  // One entry per day, including days with no complaints, so the chart has
+  // no gaps in it.
+  const daily = [];
+  for (let i = 0; i < ANALYTICS_DAYS; i += 1) {
+    const date = new Date(since.getTime() + i * DAY_MS).toISOString().slice(0, 10);
+    daily.push({ date, count: dailyRows.find((row) => row._id === date)?.count || 0 });
+  }
+
+  return { byCategory, byPriority, daily };
+}
+
 module.exports = {
   createComplaint,
   listComplaintsForCustomer,
@@ -154,4 +197,5 @@ module.exports = {
   sendComplaintReply,
   getAgentQueue,
   getComplaintSummary,
+  getComplaintAnalytics,
 };
