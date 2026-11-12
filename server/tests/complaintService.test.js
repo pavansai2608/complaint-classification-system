@@ -210,7 +210,7 @@ describe('sendComplaintReply', () => {
     expect(doc.save).toHaveBeenCalled();
   });
 
-  it('leaves wasCorrected false when the agent sends the AI category and priority unchanged', async () => {
+  it('leaves wasCorrected false when the admin sends the AI category and priority unchanged', async () => {
     const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
     Complaint.findById.mockResolvedValueOnce(doc);
 
@@ -224,7 +224,7 @@ describe('sendComplaintReply', () => {
     expect(result.originalCategory).toBeUndefined();
   });
 
-  it('flags wasCorrected and records the original values when the agent overrides the category', async () => {
+  it('flags wasCorrected and records the original values when the admin overrides the category', async () => {
     const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
     Complaint.findById.mockResolvedValueOnce(doc);
 
@@ -239,7 +239,7 @@ describe('sendComplaintReply', () => {
     expect(result.category).toBe('delivery');
   });
 
-  it('flags wasCorrected and records the original value when the agent overrides the priority', async () => {
+  it('flags wasCorrected and records the original value when the admin overrides the priority', async () => {
     const doc = fakeComplaintDoc({ category: 'billing', priority: 'Medium' });
     Complaint.findById.mockResolvedValueOnce(doc);
 

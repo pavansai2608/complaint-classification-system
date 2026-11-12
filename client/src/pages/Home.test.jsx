@@ -15,7 +15,7 @@ function renderHome() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/agent" element={<p>Agent page</p>} />
+          <Route path="/admin" element={<p>Admin page</p>} />
         </Routes>
       </AuthProvider>
     </MemoryRouter>,
@@ -53,7 +53,7 @@ describe('Home', () => {
   it('redirects a logged-in user to their role page instead of showing this page', async () => {
     apiClient.post.mockImplementation((url) => {
       if (url === '/api/auth/refresh') {
-        return Promise.resolve({ data: { user: { name: 'Riya', role: 'agent' }, accessToken: 'token' } })
+        return Promise.resolve({ data: { user: { name: 'Riya', role: 'admin' }, accessToken: 'token' } })
       }
       return Promise.resolve({})
     })
@@ -61,6 +61,6 @@ describe('Home', () => {
 
     renderHome()
 
-    expect(await screen.findByText('Agent page')).toBeInTheDocument()
+    expect(await screen.findByText('Admin page')).toBeInTheDocument()
   })
 })

@@ -7,21 +7,21 @@ Plain explanations of the words used in the Complaint Resolution System, and ans
 | Term | Meaning |
 |---|---|
 | **Complaint** | A problem a customer reports. It has a title, a description and, optionally, an order reference. |
-| **Order reference** | An order number the customer can add so the agent can find the order. Optional. |
+| **Order reference** | An order number the customer can add so the admin can find the order. Optional. |
 | **Customer** | A person who raises complaints and follows their progress. Anyone can sign up as a customer. |
-| **Agent** | A support person who works through complaints and sends replies. Agent accounts are not created on the sign-up page. |
-| **Role** | What an account is allowed to do. There are two roles: customer and agent. |
-| **Status** | Where a complaint stands: **Open** (received), **In Progress** (an agent is working on it) or **Resolved** (finished). |
+| **Admin** | A support person who works through complaints and sends replies. Admin accounts are not created on the sign-up page. |
+| **Role** | What an account is allowed to do. There are two roles: customer and admin. |
+| **Status** | Where a complaint stands: **Open** (received), **In Progress** (the admin is working on it) or **Resolved** (finished). |
 | **Category** | The kind of problem. The system picks one of three: **billing** (payments, charges, refunds), **delivery** (late, lost or wrong deliveries) or **product** (faulty or damaged items). |
-| **Confidence** | How sure the system is about the category, from 0 to 1. Below 0.6 the complaint is marked **needs review** so an agent checks it. |
+| **Confidence** | How sure the system is about the category, from 0 to 1. Below 0.6 the complaint is marked **needs review** so the admin checks it. |
 | **Sentiment (emotion)** | The feeling in the text: **negative**, **neutral** or **positive**, with a score from 0 to 1 that shows how strong it is. |
 | **Priority** | How quickly a complaint needs attention: **Low**, **Medium**, **High** or **Urgent**. See "How is priority decided?" below. |
-| **Priority queue** | The agent's list of open complaints, with the highest priority first and older complaints before newer ones of the same priority. |
-| **Suggested reply** | A draft answer written by the system for the agent to read and change. It is never sent to a customer without the agent. |
-| **Needs review** | A flag set when the system is not sure about the category. An agent should check it. |
+| **Priority queue** | The admin's list of open complaints, with the highest priority first and older complaints before newer ones of the same priority. |
+| **Suggested reply** | A draft answer written by the system for the admin to read and change. It is never sent to a customer without the admin. |
+| **Needs review** | A flag set when the system is not sure about the category. The admin should check it. |
 | **AI analysis** | The automatic step that gives a new complaint its category, sentiment, priority and suggested reply. |
 | **Analysis pending** | The analysis could not run when the complaint was sent, for example because the service was down. The complaint is still saved with a default priority of Medium. |
-| **Correction** | When an agent changes the category or priority that the system chose. The original values are kept. |
+| **Correction** | When the admin changes the category or priority that the system chose. The original values are kept. |
 
 ## FAQ
 
@@ -30,7 +30,7 @@ Plain explanations of the words used in the Complaint Resolution System, and ans
 **How do I track my complaint?**
 Log in and select **View my complaints**. Each complaint shows its status. Select one to see the details and any reply from support.
 
-**How do I know when an agent replied?**
+**How do I know when the admin replied?**
 The reply appears on the complaint's page under "Reply from support", and the status changes to Resolved. The app does not send emails yet, so check the page.
 
 **Can I change or delete a complaint after sending it?**
@@ -55,16 +55,16 @@ The system checks these rules in order and uses the first one that matches:
 3. **Medium:** the customer sounds negative at any strength, or the complaint is about billing.
 4. **Low:** everything else.
 
-An agent can change the priority before replying.
+The admin can change the priority before replying.
 
 **How is the category chosen?**
 A small model trained on example complaints reads the description and picks billing, delivery or product. If it is less than 60% sure, the complaint is marked "needs review".
 
 **Who writes the suggested reply?**
-A language model (Google Gemini) writes a short, polite draft. The agent reads it, edits it if needed, and sends it. If the model is unavailable, a fixed template is used instead.
+A language model (Google Gemini) writes a short, polite draft. The admin reads it, edits it if needed, and sends it. If the model is unavailable, a fixed template is used instead.
 
 **What if the automatic analysis is wrong?**
-An agent can correct the category and priority. The complaint is marked as corrected, and the original values are kept.
+The admin can correct the category and priority. The complaint is marked as corrected, and the original values are kept.
 
 **What if the analysis service is down when I submit?**
 Your complaint is still saved. It gets the default priority Medium and is marked "analysis pending".
@@ -73,7 +73,7 @@ Your complaint is still saved. It gets the default priority Medium and is marked
 
 **Who can see my complaints?**
 - **You**, and only you among customers. Other customers cannot open your complaints.
-- **Agents**, who can see every complaint in the queue so they can help.
+- **Admins**, who can see every complaint in the queue so they can help.
 
 **What is stored about me?**
 Your name, your email, your complaints, and the results of the analysis. Your password is never stored as text. It is stored as a one-way scrambled value that cannot be turned back into your password.

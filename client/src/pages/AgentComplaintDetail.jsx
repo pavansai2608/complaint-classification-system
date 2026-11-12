@@ -57,7 +57,7 @@ function AgentComplaintDetail() {
         priority,
       })
       setComplaint(res.data.complaint)
-      navigate('/agent/queue', { state: { replySent: true } })
+      navigate('/admin/queue', { state: { replySent: true } })
     } catch (err) {
       const apiError = err.response?.data?.error
       if (apiError?.code === 'VALIDATION_ERROR' && apiError.details) {
@@ -78,7 +78,7 @@ function AgentComplaintDetail() {
   return (
     <div className="page">
       <header className="top-bar">
-        <Link to="/agent" className="brand">
+        <Link to="/admin" className="brand">
           <span className="brand-mark" aria-hidden="true">
             CR
           </span>
@@ -90,7 +90,7 @@ function AgentComplaintDetail() {
       </header>
 
       <main className="home-hero">
-        <Link to="/agent/queue" className="lede">
+        <Link to="/admin/queue" className="lede">
           &larr; Back to queue
         </Link>
 

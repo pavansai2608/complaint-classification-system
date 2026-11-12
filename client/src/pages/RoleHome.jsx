@@ -13,13 +13,9 @@ const ROLE_CONTENT = {
     title: 'Your complaints',
     lede: 'Submit a new complaint and track the status of the ones you’ve already raised.',
   },
-  agent: {
-    title: 'Priority queue',
-    lede: 'Review complaints sorted by priority, check the AI analysis, and send replies.',
-  },
   admin: {
     title: 'Admin overview',
-    lede: 'How many complaints have come in, what they are about, and how many are still being worked on.',
+    lede: 'Work through complaints most urgent first, check the AI analysis and send replies, and see how many have come in and what they are about.',
   },
 }
 
@@ -57,6 +53,11 @@ function RoleHome() {
 
         {user.role === 'admin' && (
           <>
+            <div className="home-actions">
+              <Link to="/admin/queue" className="btn-primary-link">
+                View priority queue
+              </Link>
+            </div>
             <AdminSummary />
             <Suspense fallback={<LoadingSpinner label="Loading charts..." />}>
               <AdminAnalytics />
@@ -74,11 +75,6 @@ function RoleHome() {
                 View my complaints
               </Link>
             </>
-          )}
-          {user.role === 'agent' && (
-            <Link to="/agent/queue" className="btn-primary-link">
-              View priority queue
-            </Link>
           )}
           <span className="user-chip">
             <span className="user-chip-avatar" aria-hidden="true">

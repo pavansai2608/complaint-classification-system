@@ -49,10 +49,11 @@ function createApp({ clientOrigin }) {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/users', authenticate, userRoutes);
-  app.use('/api/agent', authenticate, requireRole('agent'), agentRoutes);
-  app.use('/api/admin', authenticate, requireRole('admin'), adminRoutes);
+  // The admin sees the analytics and works the complaint queue
+  // (/api/admin/queue), so both routers sit behind the admin check.
+  app.use('/api/admin', authenticate, requireRole('admin'), adminRoutes, agentRoutes);
   // Role is checked per-route inside complaintRoutes: customers submit and
-  // read their own complaints, agents update status - both live under /api/complaints.
+  // read their own complaints, the admin updates status and replies - both live under /api/complaints.
   app.use('/api/complaints', authenticate, complaintRoutes);
 
   app.use((req, res) => {

@@ -24,7 +24,7 @@ const complaintSchema = new mongoose.Schema(
     agentReply: { type: String, default: null },
     repliedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     repliedAt: { type: Date, default: null },
-    // Captured (not yet used for retraining) when an agent overrides the
+    // Captured (not yet used for retraining) when the admin overrides the
     // AI's category or priority before sending - real correction data for
     // a future active-learning pass.
     wasCorrected: { type: Boolean, default: false },

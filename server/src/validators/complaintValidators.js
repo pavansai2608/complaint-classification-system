@@ -25,7 +25,7 @@ const updateStatusValidator = [
   body('status').isIn(VALID_STATUSES).withMessage('Invalid status value'),
 ];
 
-// The agent can send the reply as-is or correct the AI's category/priority
+// The admin can send the reply as-is or correct the AI's category/priority
 // first - both overrides are optional and only change something if sent.
 const replyValidator = [
   param('id').isMongoId().withMessage('Invalid complaint id'),

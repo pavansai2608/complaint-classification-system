@@ -3,7 +3,7 @@ import StatusBadge from '../components/StatusBadge'
 
 // Fixed sample data, not fetched from the API - this page exists so anyone
 // can see a fully processed complaint (category, emotion, priority, AI draft,
-// agent reply) without creating an account first. The urgent keyword really
+// admin reply) without creating an account first. The urgent keyword really
 // is "refund not received" from config/urgent_keywords.json, so the priority
 // shown here matches what the same text would get from the real pipeline.
 const SAMPLE = {

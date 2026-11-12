@@ -29,9 +29,9 @@ async function listMine(req, res, next) {
 
 async function getOne(req, res, next) {
   try {
-    // Customers can only see their own complaint; agents work the whole queue.
+    // Customers can only see their own complaint; the admin works the whole queue.
     const complaint =
-      req.user.role === 'agent'
+      req.user.role === 'admin'
         ? await getComplaintById(req.params.id)
         : await getComplaintForCustomer(req.params.id, req.user.id);
     if (!complaint) return next(new ApiError(404, 'NOT_FOUND', 'Complaint not found'));

@@ -23,10 +23,10 @@ const complaint = {
 
 function renderPage(id = complaint._id) {
   return render(
-    <MemoryRouter initialEntries={[`/agent/complaints/${id}`]}>
+    <MemoryRouter initialEntries={[`/admin/complaints/${id}`]}>
       <Routes>
-        <Route path="/agent/complaints/:id" element={<AgentComplaintDetail />} />
-        <Route path="/agent/queue" element={<p>Priority queue page</p>} />
+        <Route path="/admin/complaints/:id" element={<AgentComplaintDetail />} />
+        <Route path="/admin/queue" element={<p>Priority queue page</p>} />
       </Routes>
     </MemoryRouter>,
   )

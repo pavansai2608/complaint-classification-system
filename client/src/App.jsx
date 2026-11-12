@@ -38,13 +38,10 @@ function AppRoutes() {
               <Route path="/complaints" element={<MyComplaints />} />
               <Route path="/complaints/:id" element={<ComplaintDetail />} />
             </Route>
-            <Route element={<RoleRoute allow={['agent']} />}>
-              <Route path="/agent" element={<RoleHome />} />
-              <Route path="/agent/queue" element={<AgentQueue />} />
-              <Route path="/agent/complaints/:id" element={<AgentComplaintDetail />} />
-            </Route>
             <Route element={<RoleRoute allow={['admin']} />}>
               <Route path="/admin" element={<RoleHome />} />
+              <Route path="/admin/queue" element={<AgentQueue />} />
+              <Route path="/admin/complaints/:id" element={<AgentComplaintDetail />} />
             </Route>
           </Route>
 
