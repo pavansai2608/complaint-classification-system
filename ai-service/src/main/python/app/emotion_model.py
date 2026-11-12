@@ -1,7 +1,11 @@
 import json
+import logging
 import os
+import urllib.error
 import urllib.request
 from functools import lru_cache
+
+logger = logging.getLogger(__name__)
 
 # Three ways to read the tone of a complaint, picked with EMOTION_BACKEND:
 #
@@ -99,6 +103,13 @@ def _predict_with_api(text: str) -> dict:
         return _best_label(json.loads(response.read()))
 
 
+def _describe(err: Exception) -> str:
+    if isinstance(err, urllib.error.HTTPError):
+        body = err.read().decode("utf-8", errors="replace")[:300]
+        return f"HTTP {err.code}: {body}"
+    return f"{type(err).__name__}: {err}"
+
+
 def predict_emotion(text: str) -> dict:
     backend = emotion_backend()
     if backend == LEXICON:
@@ -106,9 +117,11 @@ def predict_emotion(text: str) -> dict:
     if backend == API:
         try:
             return _predict_with_api(text)
-        except Exception:
+        except Exception as err:
             # Hugging Face down, slow, or no token: a word-list sentiment is
             # better than none, and the complaint still gets a priority.
+            # The reason is logged (never the token) so it can be fixed.
+            logger.warning("Hugging Face sentiment failed, using the word list instead: %s", _describe(err))
             return _predict_with_lexicon(text)
     classifier = load_model()
     result = classifier(text[:MAX_INPUT_CHARS], truncation=True, max_length=512)[0]
