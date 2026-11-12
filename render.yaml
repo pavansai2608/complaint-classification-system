@@ -3,10 +3,10 @@
 # MongoDB is not here - Render has no MongoDB, so the database is a free
 # MongoDB Atlas cluster and MONGODB_URI points at it.
 #
-# The ai-service runs here too, on the free plan, with EMOTION_BACKEND=lexicon:
-# the default DistilBERT sentiment model needs PyTorch and about 1.5 GB of
-# memory, and free instances have 512 MB. The lexicon option (VADER) reads the
-# tone with a word list instead, so the service fits.
+# The ai-service runs here too, on the free plan, with EMOTION_BACKEND=api:
+# the DistilBERT sentiment model needs PyTorch and about 1.5 GB of memory, and
+# free instances have 512 MB, so Hugging Face's Inference API runs the same
+# model instead. The category model (scikit-learn) still runs here.
 #
 # Every value marked `sync: false` is asked for once, when the Blueprint is
 # first created in the Render dashboard. Secrets never go in this file.
@@ -127,8 +127,12 @@ services:
         value: "3.11.11"
       - key: PYTHONPATH
         value: src/main/python
+      # Sentiment from the DistilBERT model via Hugging Face (word list if it fails).
       - key: EMOTION_BACKEND
-        value: lexicon
+        value: api
+      # Hugging Face token with the "Make calls to Inference Providers" permission.
+      - key: HF_TOKEN
+        sync: false
       # Render makes up a long random value; the server reads the same one.
       - key: AI_SERVICE_KEY
         generateValue: true
