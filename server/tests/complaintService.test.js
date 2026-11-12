@@ -14,6 +14,7 @@ const {
   getAgentQueue,
   updateComplaintStatus,
   sendComplaintReply,
+  reanalyzeComplaint,
   getComplaintById,
   getComplaintSummary,
   getComplaintAnalytics,
@@ -368,5 +369,54 @@ describe('getComplaintAnalytics', () => {
 
     const dailyPipeline = Complaint.aggregate.mock.calls[2][0];
     expect(dailyPipeline[0]).toEqual({ $match: { createdAt: { $gte: new Date('2026-10-29T00:00:00Z') } } });
+  });
+});
+
+describe('reanalyzeComplaint', () => {
+  afterEach(() => jest.clearAllMocks());
+
+  const aiResult = {
+    category: 'billing',
+    confidence: 0.9,
+    needsReview: false,
+    emotion: { label: 'negative', score: 0.8 },
+    priority: 'High',
+    suggestedReply: 'Sorry about the double charge, we are refunding it.',
+  };
+
+  it('fills in the AI analysis for a complaint saved without one', async () => {
+    const doc = fakeComplaintDoc({ id: 'c1', description: 'Charged twice', category: null, analysisPending: true });
+    doc.set = jest.fn((fields) => Object.assign(doc, fields));
+    Complaint.findById.mockResolvedValueOnce(doc);
+    analyzeComplaint.mockResolvedValueOnce(aiResult);
+
+    const result = await reanalyzeComplaint('c1');
+
+    expect(analyzeComplaint).toHaveBeenCalledWith('Charged twice');
+    expect(result.suggestedReply).toBe(aiResult.suggestedReply);
+    expect(result.analysisPending).toBe(false);
+    expect(doc.save).toHaveBeenCalled();
+  });
+
+  it('refuses to overwrite a complaint that already has an analysis', async () => {
+    Complaint.findById.mockResolvedValueOnce(fakeComplaintDoc({ category: 'billing', analysisPending: false }));
+
+    await expect(reanalyzeComplaint('c1')).rejects.toMatchObject({ statusCode: 409 });
+    expect(analyzeComplaint).not.toHaveBeenCalled();
+  });
+
+  it('reports the AI service being unavailable without changing the complaint', async () => {
+    const doc = fakeComplaintDoc({ description: 'Charged twice', category: null, analysisPending: true });
+    doc.set = jest.fn();
+    Complaint.findById.mockResolvedValueOnce(doc);
+    analyzeComplaint.mockRejectedValueOnce(new Error('timeout'));
+
+    await expect(reanalyzeComplaint('c1')).rejects.toMatchObject({ statusCode: 503 });
+    expect(doc.save).not.toHaveBeenCalled();
+  });
+
+  it('returns null for a complaint that does not exist', async () => {
+    Complaint.findById.mockResolvedValueOnce(null);
+    expect(await reanalyzeComplaint('missing')).toBeNull();
   });
 });

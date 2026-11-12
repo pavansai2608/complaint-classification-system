@@ -129,7 +129,7 @@ Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health
 
 **The ai-service on the free plan.** The default sentiment model (DistilBERT) needs PyTorch and about 1.5 GB of memory, and free instances have 512 MB. So on Render the ai-service runs with `EMOTION_BACKEND=lexicon` and installs `requirements-light.txt` (everything except PyTorch and transformers): the tone is read with VADER, a word list with rules for negation, capitals and "!!!". It is English only and a little less accurate than the model; category, priority rules and suggested replies are unchanged. Docker, Minikube and local runs keep the default `EMOTION_BACKEND=transformer`.
 
-The server waits up to `AI_SERVICE_TIMEOUT_MS` (30 s) for the ai-service. If a sleeping ai-service takes longer to wake, the complaint is still saved, with a default priority and no suggested reply; the next one is analysed normally.
+The server waits up to `AI_SERVICE_TIMEOUT_MS` (30 s) for the ai-service. If a sleeping ai-service takes longer to wake, the complaint is still saved, with a default priority and no suggested reply; the next one is analysed normally. For any complaint saved without an analysis (including ones from before the ai-service was deployed), the admin opens it and selects **Run AI analysis**: the server calls the ai-service again (`POST /api/complaints/:id/analyze`, admin only) and fills in the category, sentiment, priority and suggested reply. A complaint that already has an analysis is never overwritten.
 
 ## Tests
 

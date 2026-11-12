@@ -98,6 +98,8 @@ Admin accounts are not created on the sign-up page. That page always creates a c
 
 A customer cannot open the admin pages, and the admin cannot open the customer pages.
 
+If a complaint shows **This complaint has no AI analysis yet** (it was saved while the AI service was unavailable), select **Run AI analysis**. It can take up to 30 seconds; then the category, sentiment, priority and suggested reply appear.
+
 ### 2. Work through the priority queue
 
 The queue lists **open** complaints. The highest priority is first (Urgent, High, Medium, Low). Older complaints come before newer ones of the same priority. Each row shows the title, the priority and the status.

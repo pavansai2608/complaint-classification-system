@@ -1,5 +1,5 @@
 const express = require('express');
-const { create, listMine, getOne, updateStatus, reply } = require('../controllers/complaintController');
+const { create, listMine, getOne, updateStatus, reply, analyze } = require('../controllers/complaintController');
 const {
   createComplaintValidator,
   getComplaintValidator,
@@ -36,6 +36,15 @@ router.post(
   replyValidator,
   validate,
   reply,
+);
+// Runs the AI analysis for a complaint saved without one. No body is accepted.
+router.post(
+  '/:id/analyze',
+  requireRole('admin'),
+  rejectUnknownFields([]),
+  getComplaintValidator,
+  validate,
+  analyze,
 );
 router.get('/:id', requireRole('customer', 'admin'), getComplaintValidator, validate, getOne);
 

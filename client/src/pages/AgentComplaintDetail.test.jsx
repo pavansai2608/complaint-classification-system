@@ -98,6 +98,40 @@ describe('AgentComplaintDetail', () => {
     expect(screen.queryByLabelText('Reply to customer')).not.toBeInTheDocument()
   })
 
+  it('runs the AI analysis for an old complaint and fills in the suggested reply', async () => {
+    const unanalysed = { ...complaint, category: null, emotion: null, suggestedReply: null, analysisPending: true }
+    apiClient.get.mockResolvedValueOnce({ data: { complaint: unanalysed } })
+    apiClient.post.mockResolvedValueOnce({ data: { complaint } })
+
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Run AI analysis' }))
+
+    expect(await screen.findByDisplayValue('Sorry about the damage, we are on it.')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith(`/api/complaints/${complaint._id}/analyze`)
+    expect(screen.queryByRole('button', { name: 'Run AI analysis' })).not.toBeInTheDocument()
+  })
+
+  it('shows the error when the AI analysis cannot run', async () => {
+    const unanalysed = { ...complaint, category: null, analysisPending: true }
+    apiClient.get.mockResolvedValueOnce({ data: { complaint: unanalysed } })
+    const err = new Error('unavailable')
+    err.response = { data: { error: { message: 'The AI service did not answer. Please try again in a minute.' } } }
+    apiClient.post.mockRejectedValueOnce(err)
+
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Run AI analysis' }))
+
+    expect(await screen.findByText('The AI service did not answer. Please try again in a minute.')).toBeInTheDocument()
+  })
+
+  it('does not offer the AI analysis button when the complaint is already analysed', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: { complaint } })
+
+    renderPage()
+    await screen.findByText('Order arrived damaged')
+    expect(screen.queryByRole('button', { name: 'Run AI analysis' })).not.toBeInTheDocument()
+  })
+
   it('shows a not-found message for a complaint that does not exist', async () => {
     const err = new Error('not found')
     err.response = { status: 404 }

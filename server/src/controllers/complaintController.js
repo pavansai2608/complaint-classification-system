@@ -3,6 +3,7 @@ const {
   listComplaintsForCustomer,
   getComplaintForCustomer,
   getComplaintById,
+  reanalyzeComplaint,
   updateComplaintStatus,
   sendComplaintReply,
 } = require('../services/complaintService');
@@ -62,4 +63,14 @@ async function reply(req, res, next) {
   }
 }
 
-module.exports = { create, listMine, getOne, updateStatus, reply };
+async function analyze(req, res, next) {
+  try {
+    const complaint = await reanalyzeComplaint(req.params.id);
+    if (!complaint) return next(new ApiError(404, 'NOT_FOUND', 'Complaint not found'));
+    res.json({ complaint });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { create, listMine, getOne, updateStatus, reply, analyze };

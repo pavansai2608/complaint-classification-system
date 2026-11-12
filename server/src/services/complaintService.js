@@ -1,5 +1,6 @@
 const Complaint = require('../models/Complaint');
 const { analyzeComplaint } = require('./aiService');
+const { ApiError } = require('../utils/ApiError');
 
 // Never lets an AI service outage lose a complaint: on any failure (down,
 // slow, misconfigured) the complaint is still saved, just with a safe
@@ -46,6 +47,27 @@ async function getComplaintForCustomer(complaintId, customerId) {
 // No ownership check: the admin works the whole queue.
 async function getComplaintById(complaintId) {
   return Complaint.findById(complaintId);
+}
+
+// Runs the AI analysis for a complaint that was saved without one (the AI
+// service was down, asleep or not deployed yet). Only fills in missing
+// analysis - a complaint that already has one is left alone, so an admin's
+// corrections are never overwritten. Returns null if it doesn't exist.
+async function reanalyzeComplaint(complaintId) {
+  const complaint = await Complaint.findById(complaintId);
+  if (!complaint) return null;
+  if (complaint.category && !complaint.analysisPending) {
+    throw new ApiError(409, 'ALREADY_ANALYZED', 'This complaint already has an AI analysis.');
+  }
+
+  const analysis = await runAnalysis(complaint.description);
+  if (analysis.analysisPending) {
+    throw new ApiError(503, 'AI_UNAVAILABLE', 'The AI service did not answer. Please try again in a minute.');
+  }
+
+  complaint.set(analysis);
+  await complaint.save();
+  return complaint;
 }
 
 // Returns null if the complaint doesn't exist, so the controller can 404
@@ -193,6 +215,7 @@ module.exports = {
   listComplaintsForCustomer,
   getComplaintForCustomer,
   getComplaintById,
+  reanalyzeComplaint,
   updateComplaintStatus,
   sendComplaintReply,
   getAgentQueue,
