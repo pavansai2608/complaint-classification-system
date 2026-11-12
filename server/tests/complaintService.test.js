@@ -16,7 +16,6 @@ const {
   sendComplaintReply,
   getComplaintById,
   getComplaintSummary,
-  getComplaintAnalytics,
 } = require('../src/services/complaintService');
 
 // A minimal stand-in for a mongoose document: plain fields plus a save()
@@ -293,80 +292,5 @@ describe('getComplaintSummary', () => {
     Complaint.aggregate.mockResolvedValueOnce([{ _id: 'Open', count: 1 }]);
 
     await expect(getComplaintSummary()).resolves.toEqual({ total: 1, open: 1, inProgress: 0, resolved: 0 });
-  });
-});
-
-describe('getComplaintAnalytics', () => {
-  afterEach(() => jest.clearAllMocks());
-
-  const now = new Date('2026-11-11T09:30:00Z');
-
-  // The service runs three aggregations in this order: category, priority, daily.
-  function mockAggregations({ category = [], priority = [], daily = [] }) {
-    Complaint.aggregate
-      .mockResolvedValueOnce(category)
-      .mockResolvedValueOnce(priority)
-      .mockResolvedValueOnce(daily);
-  }
-
-  it('lists categories from most to fewest complaints and names the unanalysed ones', async () => {
-    mockAggregations({
-      category: [
-        { _id: 'delivery', count: 2 },
-        { _id: null, count: 1 },
-        { _id: 'billing', count: 5 },
-      ],
-    });
-
-    const { byCategory } = await getComplaintAnalytics(now);
-
-    expect(byCategory).toEqual([
-      { label: 'billing', count: 5 },
-      { label: 'delivery', count: 2 },
-      { label: 'Not analysed yet', count: 1 },
-    ]);
-  });
-
-  it('always returns all four priorities, highest first, with zero for an empty one', async () => {
-    mockAggregations({
-      priority: [
-        { _id: 'Low', count: 3 },
-        { _id: 'Urgent', count: 1 },
-      ],
-    });
-
-    const { byPriority } = await getComplaintAnalytics(now);
-
-    expect(byPriority).toEqual([
-      { label: 'Urgent', count: 1 },
-      { label: 'High', count: 0 },
-      { label: 'Medium', count: 0 },
-      { label: 'Low', count: 3 },
-    ]);
-  });
-
-  it('returns one entry for each of the last 14 days, filling quiet days with zero', async () => {
-    mockAggregations({
-      daily: [
-        { _id: '2026-11-11', count: 4 },
-        { _id: '2026-10-29', count: 2 },
-      ],
-    });
-
-    const { daily } = await getComplaintAnalytics(now);
-
-    expect(daily).toHaveLength(14);
-    expect(daily[0]).toEqual({ date: '2026-10-29', count: 2 });
-    expect(daily[1]).toEqual({ date: '2026-10-30', count: 0 });
-    expect(daily[13]).toEqual({ date: '2026-11-11', count: 4 });
-  });
-
-  it('only counts complaints created inside the 14-day window', async () => {
-    mockAggregations({});
-
-    await getComplaintAnalytics(now);
-
-    const dailyPipeline = Complaint.aggregate.mock.calls[2][0];
-    expect(dailyPipeline[0]).toEqual({ $match: { createdAt: { $gte: new Date('2026-10-29T00:00:00Z') } } });
   });
 });

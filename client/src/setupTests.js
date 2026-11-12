@@ -19,16 +19,6 @@ if (!window.matchMedia) {
   })
 }
 
-// jsdom has no ResizeObserver either. The chart library uses it to measure
-// its container, so give it one that never reports a size.
-if (!window.ResizeObserver) {
-  window.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-}
-
 afterEach(() => {
   cleanup()
 })

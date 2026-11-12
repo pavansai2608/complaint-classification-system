@@ -8,12 +8,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 # Picks up OS package security fixes released after this base image tag was
 # last built (e.g. OpenSSL), rather than waiting on an upstream rebuild.
-# Changing this value makes Docker re-run the upgrade below instead of
-# reusing an old cached layer. The pipeline passes today's date, so each day's
-# first build picks up that day's OS security fixes.
-ARG OS_PATCH_DATE=unset
-RUN echo "OS packages patched on $OS_PATCH_DATE" && \
-    apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY src ./src

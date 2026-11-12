@@ -80,40 +80,28 @@ function NewComplaint() {
   }
 
   return (
-    <div className="compose-page">
-      <header className="top-bar">
-        <Link to="/customer" className="brand brand-on-dark">
-          <span className="brand-mark" aria-hidden="true">
-            CR
-          </span>
-          Complaint Resolution System
-        </Link>
-        <Link to="/about" className="top-bar-about-link">
-          About
-        </Link>
-      </header>
-
-      <main className="compose-shell">
-        <div className="compose-intro">
-          <Link to="/customer" className="compose-back">
-            <span aria-hidden="true">&larr;</span> Back to my complaints
+    <div className="auth-page">
+      <div className="auth-form-panel" style={{ flex: 'none', width: '100%' }}>
+        <header className="top-bar">
+          <Link to="/customer" className="brand brand-on-dark">
+            <span className="brand-mark" aria-hidden="true">
+              CR
+            </span>
+            Complaint Resolution System
           </Link>
-          <p className="compose-eyebrow">New complaint</p>
-          <h1>Submit a complaint</h1>
-          <p className="compose-subtitle">Tell us what went wrong and we&rsquo;ll get someone on it.</p>
-        </div>
+          <Link to="/about" className="top-bar-about-link">
+            About
+          </Link>
+        </header>
 
-        <div className="compose-grid">
-          <section className="compose-card" aria-labelledby="compose-card-heading">
-            <div className="compose-card-head">
-              <div>
-                <h2 id="compose-card-heading">Your complaint</h2>
-                <p>The more detail you give, the faster it gets to the right person.</p>
-              </div>
-              <button type="button" className="try-example-btn" onClick={handleTryExample}>
-                Try with an example
-              </button>
-            </div>
+        <main className="auth-shell">
+          <div className="auth-card" style={{ maxWidth: 480 }}>
+            <h1>Submit a complaint</h1>
+            <p className="auth-subtitle">Tell us what went wrong and we&rsquo;ll get someone on it.</p>
+
+            <button type="button" className="btn-secondary try-example-btn" onClick={handleTryExample}>
+              Try with an example
+            </button>
 
             <form onSubmit={handleSubmit} noValidate>
               <div className="field">
@@ -122,7 +110,6 @@ function NewComplaint() {
                   id="title"
                   name="title"
                   type="text"
-                  placeholder="e.g. Order arrived damaged"
                   value={form.title}
                   onChange={handleChange}
                   aria-invalid={Boolean(fieldErrors.title)}
@@ -141,8 +128,7 @@ function NewComplaint() {
                 <textarea
                   id="description"
                   name="description"
-                  rows={6}
-                  placeholder="What happened, when it happened, and what you'd like us to do."
+                  rows={5}
                   value={form.description}
                   onChange={handleChange}
                   aria-invalid={Boolean(fieldErrors.description)}
@@ -162,7 +148,6 @@ function NewComplaint() {
                   id="orderReference"
                   name="orderReference"
                   type="text"
-                  placeholder="e.g. #4821"
                   value={form.orderReference}
                   onChange={handleChange}
                   aria-invalid={Boolean(fieldErrors.orderReference)}
@@ -181,54 +166,13 @@ function NewComplaint() {
                 </p>
               )}
 
-              <div className="compose-actions">
-                <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? 'Submitting…' : 'Submit complaint'}
-                </button>
-                <Link to="/customer" className="link-plain">
-                  Cancel
-                </Link>
-              </div>
+              <button type="submit" className="btn-primary" disabled={submitting}>
+                {submitting ? 'Submitting…' : 'Submit complaint'}
+              </button>
             </form>
-          </section>
-
-          <aside className="compose-aside" aria-label="What happens next">
-            <h2>What happens next</h2>
-            <ol className="compose-steps">
-              <li>
-                <span className="compose-step-num" aria-hidden="true">1</span>
-                <div>
-                  <strong>We sort it</strong>
-                  <p>Your complaint is tagged with a category and an urgency level the moment it arrives.</p>
-                </div>
-              </li>
-              <li>
-                <span className="compose-step-num" aria-hidden="true">2</span>
-                <div>
-                  <strong>An agent picks it up</strong>
-                  <p>The most urgent complaints reach the front of the queue first.</p>
-                </div>
-              </li>
-              <li>
-                <span className="compose-step-num" aria-hidden="true">3</span>
-                <div>
-                  <strong>You get a reply</strong>
-                  <p>Track progress and read replies under My complaints.</p>
-                </div>
-              </li>
-            </ol>
-
-            <div className="compose-tips">
-              <h3>Tips for a faster fix</h3>
-              <ul>
-                <li>Say what you expected and what actually happened.</li>
-                <li>Include dates, amounts and order numbers.</li>
-                <li>Keep one problem per complaint.</li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

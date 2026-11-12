@@ -1,12 +1,6 @@
-import { lazy, Suspense } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AdminSummary from '../components/AdminSummary'
-import LoadingSpinner from '../components/LoadingSpinner'
-
-// The chart library is large and only admins need it, so it is downloaded
-// the first time an admin opens this page instead of for every visitor.
-const AdminAnalytics = lazy(() => import('../components/AdminAnalytics'))
 
 const ROLE_CONTENT = {
   customer: {
@@ -19,7 +13,7 @@ const ROLE_CONTENT = {
   },
   admin: {
     title: 'Admin overview',
-    lede: 'How many complaints have come in, what they are about, and how many are still being worked on.',
+    lede: 'How many complaints have come in, and how many are still being worked on.',
   },
 }
 
@@ -55,14 +49,7 @@ function RoleHome() {
           </p>
         )}
 
-        {user.role === 'admin' && (
-          <>
-            <AdminSummary />
-            <Suspense fallback={<LoadingSpinner label="Loading charts..." />}>
-              <AdminAnalytics />
-            </Suspense>
-          </>
-        )}
+        {user.role === 'admin' && <AdminSummary />}
 
         <div className="home-actions">
           {user.role === 'customer' && (

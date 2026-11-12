@@ -10,13 +10,6 @@ vi.mock('../api/client', () => ({
   default: { post: vi.fn(), get: vi.fn(), defaults: { headers: { common: {} } } },
 }))
 
-// The charts have their own tests (AdminAnalytics.test.jsx). Loading the real
-// chart library here made these page tests slow enough to time out on a busy
-// build server, so the page tests use a stand-in.
-vi.mock('../components/AdminAnalytics', () => ({
-  default: () => <p>Admin charts</p>,
-}))
-
 function renderAsRole(role) {
   apiClient.post.mockImplementation((url) => {
     if (url === '/api/auth/refresh') {
@@ -81,12 +74,6 @@ describe('RoleHome', () => {
     expect(await screen.findByText('All complaints')).toBeInTheDocument()
     expect(screen.getByText('7')).toBeInTheDocument()
     expect(apiClient.get).toHaveBeenCalledWith('/api/admin/summary')
-  })
-
-  it('shows the analytics charts to an admin', async () => {
-    renderAsRole('admin')
-
-    expect(await screen.findByText('Admin charts')).toBeInTheDocument()
   })
 
   it('does not load admin numbers for an agent', async () => {
