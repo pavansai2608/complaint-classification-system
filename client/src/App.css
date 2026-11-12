@@ -514,6 +514,12 @@ a.lede:hover {
   min-width: 0;
 }
 
+/* A page that has only the form panel (no visual panel beside it) spans
+   both columns, so it sits in the centre instead of the left half. */
+.auth-page > .auth-form-panel:only-child {
+  grid-column: 1 / -1;
+}
+
 .auth-shell {
   width: 100%;
   max-width: 400px;
