@@ -3,11 +3,10 @@
 # MongoDB is not here - Render has no MongoDB, so the database is a free
 # MongoDB Atlas cluster and MONGODB_URI points at it.
 #
-# The ai-service is not here either. It loads PyTorch and a DistilBERT model,
-# which needs about 1.5 GB of memory; Render's free instances have 512 MB, so
-# it would be killed on start. Without it the server still works: it saves each
-# complaint with a default priority (see server/src/services/aiService.js).
-# README "Run on Render" explains how to add it on a paid instance.
+# The ai-service runs here too, on the free plan, with EMOTION_BACKEND=lexicon:
+# the default DistilBERT sentiment model needs PyTorch and about 1.5 GB of
+# memory, and free instances have 512 MB. The lexicon option (VADER) reads the
+# tone with a word list instead, so the service fits.
 #
 # Every value marked `sync: false` is asked for once, when the Blueprint is
 # first created in the Render dashboard. Secrets never go in this file.
@@ -97,10 +96,51 @@ services:
         value: 7d
       - key: GOOGLE_CLIENT_ID
         sync: false
-      # Leave these two empty to run without the ai-service.
+      # The ai-service's public address, e.g. https://complaint-triage-ai-xxxx.onrender.com
+      # (free services can't receive private-network calls, so it is the public one).
       - key: AI_SERVICE_URL
         sync: false
+      # Same value as on the ai-service, which generates it.
       - key: AI_SERVICE_KEY
-        sync: false
+        fromService:
+          type: web
+          name: complaint-triage-ai
+          envVarKey: AI_SERVICE_KEY
+      # A sleeping free ai-service takes a while to wake. The customer waits for
+      # this call when submitting, so cap it at 30 s; if it runs out, the
+      # complaint is still saved with a default priority.
       - key: AI_SERVICE_TIMEOUT_MS
-        value: "5000"
+        value: "30000"
+
+  # The FastAPI ai-service: category, sentiment, priority and suggested reply.
+  # Only the server calls it, with the shared AI_SERVICE_KEY.
+  - type: web
+    name: complaint-triage-ai
+    runtime: python
+    plan: free
+    rootDir: ai-service
+    buildCommand: pip install -r requirements-light.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.11"
+      - key: PYTHONPATH
+        value: src/main/python
+      - key: EMOTION_BACKEND
+        value: lexicon
+      # Render makes up a long random value; the server reads the same one.
+      - key: AI_SERVICE_KEY
+        generateValue: true
+      # From https://aistudio.google.com/apikey - writes the suggested replies.
+      - key: GEMINI_API_KEY
+        sync: false
+      # Optional fallback for suggested replies, from https://console.groq.com/keys
+      - key: GROQ_API_KEY
+        sync: false
+      # The same Atlas database as the server, to find similar past complaints.
+      - key: MONGODB_URI
+        fromService:
+          type: web
+          name: complaint-triage-server
+          envVarKey: MONGODB_URI

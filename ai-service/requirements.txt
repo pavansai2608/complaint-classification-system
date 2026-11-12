@@ -4,6 +4,7 @@ scikit-learn==1.7.2
 pandas==2.3.3
 joblib==1.5.2
 transformers==5.17.0
+vaderSentiment==3.3.2
 torch==2.14.0
 google-genai==2.24.0
 groq==1.7.0
