@@ -18,6 +18,8 @@ function AgentComplaintDetail() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +46,25 @@ function AgentComplaintDetail() {
       cancelled = true
     }
   }, [id])
+
+  // For a complaint saved before the AI service answered: run the analysis
+  // now and fill the form with its category, priority and suggested reply.
+  async function handleAnalyze() {
+    setAnalyzeError('')
+    setAnalyzing(true)
+    try {
+      const res = await apiClient.post(`/api/complaints/${id}/analyze`)
+      const data = res.data.complaint
+      setComplaint(data)
+      setReplyText(data.suggestedReply || '')
+      setCategory(data.category || '')
+      setPriority(data.priority || 'Medium')
+    } catch (err) {
+      setAnalyzeError(err.response?.data?.error?.message || 'Could not run the AI analysis. Please try again.')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -122,8 +143,18 @@ function AgentComplaintDetail() {
                 <strong>AI emotion:</strong>{' '}
                 {complaint.emotion?.label ? `${complaint.emotion.label} (${complaint.emotion.score})` : 'Not analyzed'}
               </p>
-              {complaint.analysisPending && (
-                <p className="lede">AI analysis is still pending for this complaint - review and reply manually.</p>
+              {(complaint.analysisPending || !complaint.category) && (
+                <>
+                  <p className="lede">This complaint has no AI analysis yet.</p>
+                  <button type="button" className="btn-primary" onClick={handleAnalyze} disabled={analyzing}>
+                    {analyzing ? 'Analysing… (up to 30 seconds)' : 'Run AI analysis'}
+                  </button>
+                  {analyzeError && (
+                    <p className="form-error" role="alert">
+                      {analyzeError}
+                    </p>
+                  )}
+                </>
               )}
               {complaint.wasCorrected && (
                 <p className="lede">

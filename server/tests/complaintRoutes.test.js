@@ -30,6 +30,7 @@ const {
   getComplaintById,
   updateComplaintStatus,
   sendComplaintReply,
+  reanalyzeComplaint,
 } = require('../src/services/complaintService');
 const { ApiError } = require('../src/utils/ApiError');
 
@@ -425,5 +426,60 @@ describe('POST /api/complaints/:id/reply', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.details.some((d) => d.field === 'repliedBy')).toBe(true);
     expect(sendComplaintReply).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/complaints/:id/analyze', () => {
+  const validId = '507f1f77bcf86cd799439011';
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('blocks a customer from running the analysis', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'customer-id', role: 'customer' });
+    const res = await request(app)
+      .post(`/api/complaints/${validId}/analyze`)
+      .set('Authorization', `Bearer ${tokenFor('customer')}`);
+
+    expect(res.status).toBe(403);
+    expect(reanalyzeComplaint).not.toHaveBeenCalled();
+  });
+
+  it('lets the admin run the analysis and returns the updated complaint', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
+    reanalyzeComplaint.mockResolvedValueOnce({ id: validId, category: 'billing', suggestedReply: 'Sorry.' });
+
+    const res = await request(app)
+      .post(`/api/complaints/${validId}/analyze`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.complaint.suggestedReply).toBe('Sorry.');
+    expect(reanalyzeComplaint).toHaveBeenCalledWith(validId);
+  });
+
+  it('returns 404 for a complaint that does not exist', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
+    reanalyzeComplaint.mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .post(`/api/complaints/${validId}/analyze`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects a malformed id and any request body', async () => {
+    getCurrentUser.mockResolvedValue({ id: 'admin-id', role: 'admin' });
+    const bad = await request(app)
+      .post('/api/complaints/not-an-id/analyze')
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
+    const withBody = await request(app)
+      .post(`/api/complaints/${validId}/analyze`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
+      .send({ category: 'billing' });
+
+    expect(bad.status).toBe(400);
+    expect(withBody.status).toBe(400);
+    expect(reanalyzeComplaint).not.toHaveBeenCalled();
   });
 });
