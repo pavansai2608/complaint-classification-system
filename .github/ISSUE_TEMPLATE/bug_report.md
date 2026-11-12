@@ -28,7 +28,7 @@ CCS-
 
 ## Environment
 
-- Where did you see it? (local, Minikube, EC2)
+- Where did you see it? (local, Minikube, Render)
 - Browser and version:
 - Service affected (client, server, ai-service):
 - Branch or commit:
