@@ -43,14 +43,14 @@ async function getComplaintForCustomer(complaintId, customerId) {
   return Complaint.findOne({ _id: complaintId, customer: customerId });
 }
 
-// No ownership check: agents work the whole queue, not just their own complaints.
+// No ownership check: the admin works the whole queue.
 async function getComplaintById(complaintId) {
   return Complaint.findById(complaintId);
 }
 
 // Returns null if the complaint doesn't exist, so the controller can 404
-// without an agent being able to tell "missing" from "not yours to see" -
-// agents can act on any complaint, so there's no ownership check here.
+// without the admin being able to tell "missing" from "not yours to see" -
+// the admin can act on any complaint, so there's no ownership check here.
 async function updateComplaintStatus(complaintId, status, agentId) {
   return Complaint.findByIdAndUpdate(
     complaintId,
@@ -60,7 +60,7 @@ async function updateComplaintStatus(complaintId, status, agentId) {
 }
 
 // Returns null if the complaint doesn't exist. Resolves the complaint as
-// part of sending the reply, matching the agent workflow: review, correct
+// part of sending the reply, matching the admin workflow: review, correct
 // if needed, send, done - one action, not a separate "mark resolved" step.
 async function sendComplaintReply(complaintId, { reply, category, priority }, agentId) {
   const complaint = await Complaint.findById(complaintId);

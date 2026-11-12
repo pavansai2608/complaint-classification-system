@@ -30,7 +30,6 @@ function renderAsRole(role) {
       <AuthProvider>
         <Routes>
           <Route element={<ProtectedRoute />}>
-            <Route path="/agent" element={<RoleHome />} />
             <Route path="/customer" element={<RoleHome />} />
             <Route path="/admin" element={<RoleHome />} />
           </Route>
@@ -49,7 +48,6 @@ describe('RoleHome', () => {
 
   it.each([
     ['customer', 'Your complaints'],
-    ['agent', 'Priority queue'],
     ['admin', 'Admin overview'],
   ])('shows %s-specific content and the logged-in user', async (role, heading) => {
     renderAsRole(role)
@@ -59,12 +57,12 @@ describe('RoleHome', () => {
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
   })
 
-  it('shows a link to the priority queue for agents', async () => {
-    renderAsRole('agent')
+  it('shows the admin a link to the priority queue', async () => {
+    renderAsRole('admin')
 
     expect(await screen.findByRole('link', { name: 'View priority queue' })).toHaveAttribute(
       'href',
-      '/agent/queue',
+      '/admin/queue',
     )
   })
 
@@ -89,10 +87,10 @@ describe('RoleHome', () => {
     expect(await screen.findByText('Admin charts')).toBeInTheDocument()
   })
 
-  it('does not load admin numbers for an agent', async () => {
-    renderAsRole('agent')
+  it('does not load admin numbers for a customer', async () => {
+    renderAsRole('customer')
 
-    await screen.findByText('Priority queue')
+    await screen.findByText('Your complaints')
     expect(apiClient.get).not.toHaveBeenCalled()
   })
 })

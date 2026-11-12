@@ -97,8 +97,8 @@ describe('POST /api/complaints (integration)', () => {
     expect(await Complaint.countDocuments()).toBe(0);
   });
 
-  it('blocks an agent from submitting a complaint', async () => {
-    const { token } = await createUser('agent');
+  it('blocks the admin from submitting a complaint', async () => {
+    const { token } = await createUser('admin');
 
     const res = await request(app)
       .post('/api/complaints')
@@ -107,6 +107,27 @@ describe('POST /api/complaints (integration)', () => {
 
     expect(res.status).toBe(403);
     expect(await Complaint.countDocuments()).toBe(0);
+  });
+});
+
+describe('admin and complaints (integration)', () => {
+  it('lets an admin open any complaint with its suggested reply', async () => {
+    const { user: customer } = await createUser('customer');
+    const { token: adminToken } = await createUser('admin');
+    const complaint = await Complaint.create({
+      customer: customer.id,
+      title: 'Charged twice',
+      description: 'a'.repeat(15),
+      priority: 'High',
+      suggestedReply: 'Sorry about the double charge, we are refunding it.',
+    });
+
+    const res = await request(app)
+      .get(`/api/complaints/${complaint.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.complaint.suggestedReply).toBe('Sorry about the double charge, we are refunding it.');
   });
 });
 
@@ -131,8 +152,8 @@ describe('GET /api/complaints/mine (integration)', () => {
     expect(res.status).toBe(401);
   });
 
-  it('blocks an agent from using the customer-only list', async () => {
-    const { token } = await createUser('agent');
+  it('blocks the admin from using the customer-only list', async () => {
+    const { token } = await createUser('admin');
     const res = await request(app).get('/api/complaints/mine').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
   });
@@ -155,9 +176,9 @@ describe('GET /api/complaints/:id (integration)', () => {
     expect(res.body.complaint._id).toBe(complaint.id);
   });
 
-  it('lets an agent view any complaint, regardless of who owns it', async () => {
+  it('lets the admin view any complaint, regardless of who owns it', async () => {
     const { user: customer } = await createUser('customer');
-    const { token: agentToken } = await createUser('agent');
+    const { token: adminToken } = await createUser('admin');
     const complaint = await Complaint.create({
       customer: customer.id,
       title: 'Order damaged',
@@ -166,7 +187,7 @@ describe('GET /api/complaints/:id (integration)', () => {
 
     const res = await request(app)
       .get(`/api/complaints/${complaint.id}`)
-      .set('Authorization', `Bearer ${agentToken}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
   });
@@ -197,10 +218,10 @@ describe('GET /api/complaints/:id (integration)', () => {
   });
 });
 
-describe('GET /api/agent/queue (integration)', () => {
+describe('GET /api/admin/queue (integration)', () => {
   it('returns open complaints sorted by priority, highest first', async () => {
     const { user: customer } = await createUser('customer');
-    const { token: agentToken } = await createUser('agent');
+    const { token: adminToken } = await createUser('admin');
 
     await Complaint.create({
       customer: customer.id,
@@ -222,32 +243,32 @@ describe('GET /api/agent/queue (integration)', () => {
       status: 'Resolved',
     });
 
-    const res = await request(app).get('/api/agent/queue').set('Authorization', `Bearer ${agentToken}`);
+    const res = await request(app).get('/api/admin/queue').set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     // Resolved complaints are excluded by the default status filter.
     expect(res.body.items.map((i) => i.title)).toEqual(['Urgent one', 'Low one']);
   });
 
-  it('blocks a customer from the agent queue', async () => {
+  it('blocks a customer from the admin queue', async () => {
     const { token } = await createUser('customer');
-    const res = await request(app).get('/api/agent/queue').set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get('/api/admin/queue').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
   });
 
   it('rejects an invalid status filter', async () => {
-    const { token } = await createUser('agent');
+    const { token } = await createUser('admin');
     const res = await request(app)
-      .get('/api/agent/queue?status=NotARealStatus')
+      .get('/api/admin/queue?status=NotARealStatus')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(400);
   });
 });
 
 describe('PATCH /api/complaints/:id/status (integration)', () => {
-  it('lets an agent update the status and records who did it', async () => {
+  it('lets the admin update the status and records who did it', async () => {
     const { user: customer } = await createUser('customer');
-    const { token: agentToken, user: agent } = await createUser('agent');
+    const { token: adminToken, user: admin } = await createUser('admin');
     const complaint = await Complaint.create({
       customer: customer.id,
       title: 'Order damaged',
@@ -256,7 +277,7 @@ describe('PATCH /api/complaints/:id/status (integration)', () => {
 
     const res = await request(app)
       .patch(`/api/complaints/${complaint.id}/status`)
-      .set('Authorization', `Bearer ${agentToken}`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'In Progress' });
 
     expect(res.status).toBe(200);
@@ -264,12 +285,12 @@ describe('PATCH /api/complaints/:id/status (integration)', () => {
 
     const saved = await Complaint.findById(complaint.id);
     expect(saved.status).toBe('In Progress');
-    expect(saved.statusUpdatedBy.toString()).toBe(agent.id);
+    expect(saved.statusUpdatedBy.toString()).toBe(admin.id);
   });
 
   it('rejects an invalid status value', async () => {
     const { user: customer } = await createUser('customer');
-    const { token: agentToken } = await createUser('agent');
+    const { token: adminToken } = await createUser('admin');
     const complaint = await Complaint.create({
       customer: customer.id,
       title: 'Order damaged',
@@ -278,7 +299,7 @@ describe('PATCH /api/complaints/:id/status (integration)', () => {
 
     const res = await request(app)
       .patch(`/api/complaints/${complaint.id}/status`)
-      .set('Authorization', `Bearer ${agentToken}`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'Cancelled' });
 
     expect(res.status).toBe(400);
@@ -339,9 +360,4 @@ describe('GET /api/admin/analytics (integration)', () => {
     expect(res.body.daily.reduce((sum, day) => sum + day.count, 0)).toBe(4);
   });
 
-  it('blocks an agent from the admin analytics', async () => {
-    const { token } = await createUser('agent');
-    const res = await request(app).get('/api/admin/analytics').set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(403);
-  });
 });

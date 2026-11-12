@@ -23,7 +23,7 @@ router.post(
 router.get('/mine', requireRole('customer'), listMine);
 router.patch(
   '/:id/status',
-  requireRole('agent'),
+  requireRole('admin'),
   rejectUnknownFields(['status']),
   updateStatusValidator,
   validate,
@@ -31,12 +31,12 @@ router.patch(
 );
 router.post(
   '/:id/reply',
-  requireRole('agent'),
+  requireRole('admin'),
   rejectUnknownFields(['reply', 'category', 'priority']),
   replyValidator,
   validate,
   reply,
 );
-router.get('/:id', requireRole('customer', 'agent'), getComplaintValidator, validate, getOne);
+router.get('/:id', requireRole('customer', 'admin'), getComplaintValidator, validate, getOne);
 
 module.exports = router;

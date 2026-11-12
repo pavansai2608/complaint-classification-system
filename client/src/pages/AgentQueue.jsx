@@ -16,7 +16,7 @@ function AgentQueue() {
   useEffect(() => {
     let cancelled = false
     apiClient
-      .get('/api/agent/queue', { params: { limit: 100 } })
+      .get('/api/admin/queue', { params: { limit: 100 } })
       .then((res) => {
         if (!cancelled) setItems(res.data.items)
       })
@@ -34,7 +34,7 @@ function AgentQueue() {
   return (
     <div className="page">
       <header className="top-bar">
-        <Link to="/agent" className="brand">
+        <Link to="/admin" className="brand">
           <span className="brand-mark" aria-hidden="true">
             CR
           </span>
@@ -46,7 +46,7 @@ function AgentQueue() {
       </header>
 
       <main className="home-hero">
-        <Link to="/agent" className="lede">
+        <Link to="/admin" className="lede">
           &larr; Back to dashboard
         </Link>
 
@@ -74,7 +74,7 @@ function AgentQueue() {
           <ul className="complaint-list">
             {items.map((item) => (
               <li key={item._id}>
-                <Link to={`/agent/complaints/${item._id}`} className="complaint-card">
+                <Link to={`/admin/complaints/${item._id}`} className="complaint-card">
                   <span className="complaint-card-title">{item.title}</span>
                   <span className="complaint-card-badges">
                     <PriorityBadge priority={item.priority} />

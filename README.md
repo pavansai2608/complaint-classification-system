@@ -1,6 +1,6 @@
 # Complaint Triage & Resolution System
 
-A web app where customers raise and track complaints, agents work through a priority queue and send replies, and admins see analytics on a dashboard. Each new complaint is automatically tagged with a category, sentiment, priority and a suggested reply.
+A web app where customers raise and track complaints, and an admin works through every complaint in order of urgency (most urgent first), reviews the AI analysis and suggested reply, edits and sends it, and sees analytics on a dashboard. There are two roles, customer and admin; the admin cannot submit complaints. Each new complaint is automatically tagged with a category, sentiment, priority and a suggested reply.
 
 ## Project structure
 

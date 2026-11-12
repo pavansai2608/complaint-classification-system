@@ -54,11 +54,11 @@ describe('POST /api/complaints', () => {
     expect(createComplaint).not.toHaveBeenCalled();
   });
 
-  it('blocks an agent from submitting a complaint', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+  it('blocks the admin from submitting a complaint', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .post('/api/complaints')
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send(validBody);
     expect(res.status).toBe(403);
     expect(createComplaint).not.toHaveBeenCalled();
@@ -210,13 +210,13 @@ describe('GET /api/complaints/:id', () => {
     expect(res.status).toBe(404);
   });
 
-  it('lets an agent view any complaint, with no ownership check', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+  it('lets the admin view any complaint, with no ownership check', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     getComplaintById.mockResolvedValueOnce({ id: validId, title: 'Order damaged', status: 'Open' });
 
     const res = await request(app)
       .get(`/api/complaints/${validId}`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`);
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
 
     expect(res.status).toBe(200);
     expect(res.body.complaint.id).toBe(validId);
@@ -224,13 +224,13 @@ describe('GET /api/complaints/:id', () => {
     expect(getComplaintForCustomer).not.toHaveBeenCalled();
   });
 
-  it('returns 404 when an agent looks up a complaint that does not exist', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+  it('returns 404 when the admin looks up a complaint that does not exist', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     getComplaintById.mockResolvedValueOnce(null);
 
     const res = await request(app)
       .get(`/api/complaints/${validId}`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`);
+      .set('Authorization', `Bearer ${tokenFor('admin')}`);
 
     expect(res.status).toBe(404);
   });
@@ -258,25 +258,25 @@ describe('PATCH /api/complaints/:id/status', () => {
     expect(updateComplaintStatus).not.toHaveBeenCalled();
   });
 
-  it('lets an agent update the status', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+  it('lets the admin update the status', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     updateComplaintStatus.mockResolvedValueOnce({ id: validId, status: 'In Progress' });
 
     const res = await request(app)
       .patch(`/api/complaints/${validId}/status`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ status: 'In Progress' });
 
     expect(res.status).toBe(200);
     expect(res.body.complaint.status).toBe('In Progress');
-    expect(updateComplaintStatus).toHaveBeenCalledWith(validId, 'In Progress', 'agent-id');
+    expect(updateComplaintStatus).toHaveBeenCalledWith(validId, 'In Progress', 'admin-id');
   });
 
   it('rejects an invalid status value before it reaches the service', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .patch(`/api/complaints/${validId}/status`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ status: 'Cancelled' });
 
     expect(res.status).toBe(400);
@@ -284,10 +284,10 @@ describe('PATCH /api/complaints/:id/status', () => {
   });
 
   it('rejects a malformed complaint id before it reaches the service', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .patch('/api/complaints/not-a-valid-id/status')
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ status: 'Resolved' });
 
     expect(res.status).toBe(400);
@@ -295,22 +295,22 @@ describe('PATCH /api/complaints/:id/status', () => {
   });
 
   it('returns 404 when the complaint does not exist', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     updateComplaintStatus.mockResolvedValueOnce(null);
 
     const res = await request(app)
       .patch(`/api/complaints/${validId}/status`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ status: 'Resolved' });
 
     expect(res.status).toBe(404);
   });
 
   it('rejects an unknown field, such as an attempt to set statusUpdatedBy directly', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .patch(`/api/complaints/${validId}/status`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ status: 'Resolved', statusUpdatedBy: 'someone-else' });
 
     expect(res.status).toBe(400);
@@ -341,8 +341,8 @@ describe('POST /api/complaints/:id/reply', () => {
     expect(sendComplaintReply).not.toHaveBeenCalled();
   });
 
-  it('lets an agent send a reply with no corrections', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+  it('lets the admin send a reply with no corrections', async () => {
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     sendComplaintReply.mockResolvedValueOnce({
       id: validId,
       agentReply: 'We refunded the charge.',
@@ -352,7 +352,7 @@ describe('POST /api/complaints/:id/reply', () => {
 
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: 'We refunded the charge.' });
 
     expect(res.status).toBe(200);
@@ -360,32 +360,32 @@ describe('POST /api/complaints/:id/reply', () => {
     expect(sendComplaintReply).toHaveBeenCalledWith(
       validId,
       { reply: 'We refunded the charge.', category: undefined, priority: undefined },
-      'agent-id',
+      'admin-id',
     );
   });
 
   it('passes category and priority corrections through to the service', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     sendComplaintReply.mockResolvedValueOnce({ id: validId, wasCorrected: true });
 
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: 'Correcting the category.', category: 'delivery', priority: 'High' });
 
     expect(res.status).toBe(200);
     expect(sendComplaintReply).toHaveBeenCalledWith(
       validId,
       { reply: 'Correcting the category.', category: 'delivery', priority: 'High' },
-      'agent-id',
+      'admin-id',
     );
   });
 
   it('rejects a blank reply before it reaches the service', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: '   ' });
 
     expect(res.status).toBe(400);
@@ -393,10 +393,10 @@ describe('POST /api/complaints/:id/reply', () => {
   });
 
   it('rejects an invalid priority value before it reaches the service', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: 'Thanks.', priority: 'Severe' });
 
     expect(res.status).toBe(400);
@@ -404,22 +404,22 @@ describe('POST /api/complaints/:id/reply', () => {
   });
 
   it('returns 404 when the complaint does not exist', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     sendComplaintReply.mockResolvedValueOnce(null);
 
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: 'Thanks.' });
 
     expect(res.status).toBe(404);
   });
 
   it('rejects an unknown field, such as an attempt to set repliedBy directly', async () => {
-    getCurrentUser.mockResolvedValueOnce({ id: 'agent-id', role: 'agent' });
+    getCurrentUser.mockResolvedValueOnce({ id: 'admin-id', role: 'admin' });
     const res = await request(app)
       .post(`/api/complaints/${validId}/reply`)
-      .set('Authorization', `Bearer ${tokenFor('agent')}`)
+      .set('Authorization', `Bearer ${tokenFor('admin')}`)
       .send({ reply: 'Thanks.', repliedBy: 'someone-else' });
 
     expect(res.status).toBe(400);

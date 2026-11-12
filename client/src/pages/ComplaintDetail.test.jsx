@@ -88,7 +88,7 @@ describe('ComplaintDetail', () => {
     expect(screen.queryByText('Analyzed automatically when you submitted this')).not.toBeInTheDocument()
   })
 
-  it('shows the agent reply once one has been sent', async () => {
+  it('shows the admin reply once one has been sent', async () => {
     apiClient.get.mockResolvedValueOnce({
       data: {
         complaint: {

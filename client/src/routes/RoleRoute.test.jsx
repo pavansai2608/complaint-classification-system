@@ -23,8 +23,8 @@ function renderAsCustomer(atPath) {
       <AuthProvider>
         <Routes>
           <Route element={<ProtectedRoute />}>
-            <Route element={<RoleRoute allow={['agent']} />}>
-              <Route path="/agent" element={<p>Agent-only page</p>} />
+            <Route element={<RoleRoute allow={['admin']} />}>
+              <Route path="/admin" element={<p>Admin-only page</p>} />
             </Route>
             <Route path="/customer" element={<p>Customer page</p>} />
           </Route>
@@ -39,8 +39,8 @@ describe('RoleRoute', () => {
     apiClient.post.mockReset()
   })
 
-  it('sends a customer away from an agent-only page to their own page', async () => {
-    renderAsCustomer('/agent')
+  it('sends a customer away from an admin-only page to their own page', async () => {
+    renderAsCustomer('/admin')
     expect(await screen.findByText('Customer page')).toBeInTheDocument()
   })
 })

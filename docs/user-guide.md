@@ -1,10 +1,10 @@
 # User guide
 
-How to use the Complaint Resolution System. There is one section for customers and one for agents.
+How to use the Complaint Resolution System. There is one section for customers and one for admins.
 
 New words are explained in the [glossary and FAQ](glossary-faq.md).
 
-All screenshots were taken from the running app with made-up data. The category, priority and suggested reply shown in the agent screenshots came from a stand-in analysis service, so real results will differ.
+All screenshots were taken from the running app with made-up data. The category, priority and suggested reply shown in the admin screenshots came from a stand-in analysis service, so real results will differ.
 
 ## Customers
 
@@ -69,9 +69,9 @@ Please do not write passwords, card numbers or other private details in a compla
 
    | Status | Meaning |
    |---|---|
-   | Open | We received it. No agent has started yet. |
-   | In Progress | An agent is working on it. |
-   | Resolved | The agent has finished. |
+   | Open | We received it. No admin has started yet. |
+   | In Progress | The admin is working on it. |
+   | Resolved | The admin has finished. |
 
    ![Your complaints](images/08-my-complaints.png)
 
@@ -79,24 +79,24 @@ Please do not write passwords, card numbers or other private details in a compla
 
    ![Complaint details](images/09-complaint-detail.png)
 
-4. When an agent replies, the status changes to Resolved and the reply appears on the complaint's page under "Reply from support". The app does not send emails yet, so check the page.
+4. When the admin replies, the status changes to Resolved and the reply appears on the complaint's page under "Reply from support". The app does not send emails yet, so check the page.
 
    ![Reply from support](images/14-customer-reply.png)
 
 You can only see your own complaints.
 
-## Agents
+## Admins
 
 ### 1. Log in
 
-Agent accounts are not created on the sign-up page. That page always creates a customer account. Ask the project team for an agent account.
+Admin accounts are not created on the sign-up page. That page always creates a customer account. Ask the project team for the admin account.
 
 1. Open the log in page, enter your email and password, and select **Log in**.
-2. You land on the agent home page. Select **View priority queue**. Select **Log out** when you finish.
+2. You land on the admin home page. Select **View priority queue** at the top to see every complaint, most urgent first. The charts below show totals by category, priority and day. Select **Log out** when you finish.
 
-   ![Agent home](images/10-agent-home.png)
+   ![Admin home](images/10-agent-home.png)
 
-A customer cannot open the agent pages, and an agent cannot open the customer pages.
+A customer cannot open the admin pages, and the admin cannot open the customer pages.
 
 ### 2. Work through the priority queue
 

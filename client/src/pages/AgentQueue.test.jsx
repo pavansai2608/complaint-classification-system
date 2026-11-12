@@ -8,12 +8,12 @@ vi.mock('../api/client', () => ({
   default: { get: vi.fn() },
 }))
 
-function renderPage(initialEntry = '/agent/queue') {
+function renderPage(initialEntry = '/admin/queue') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/agent/queue" element={<AgentQueue />} />
-        <Route path="/agent/complaints/:id" element={<p>Complaint detail</p>} />
+        <Route path="/admin/queue" element={<AgentQueue />} />
+        <Route path="/admin/complaints/:id" element={<p>Complaint detail</p>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -40,7 +40,7 @@ describe('AgentQueue', () => {
     expect(await screen.findByText('Charged twice')).toBeInTheDocument()
     expect(screen.getByText('Late delivery')).toBeInTheDocument()
     expect(screen.getByText('Urgent')).toBeInTheDocument()
-    expect(apiClient.get).toHaveBeenCalledWith('/api/agent/queue', { params: { limit: 100 } })
+    expect(apiClient.get).toHaveBeenCalledWith('/api/admin/queue', { params: { limit: 100 } })
   })
 
   it('renders an item saved before the priority field existed without crashing', async () => {
@@ -86,9 +86,9 @@ describe('AgentQueue', () => {
     apiClient.get.mockResolvedValueOnce({ data: { items: [], total: 0 } })
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/agent/queue', state: { replySent: true } }]}>
+      <MemoryRouter initialEntries={[{ pathname: '/admin/queue', state: { replySent: true } }]}>
         <Routes>
-          <Route path="/agent/queue" element={<AgentQueue />} />
+          <Route path="/admin/queue" element={<AgentQueue />} />
         </Routes>
       </MemoryRouter>,
     )

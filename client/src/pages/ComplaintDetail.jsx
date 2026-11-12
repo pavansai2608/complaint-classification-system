@@ -87,7 +87,7 @@ function ComplaintDetail() {
               </div>
             )}
             {complaint.analysisPending && (
-              <p className="lede">We&rsquo;re still analyzing this complaint - an agent will pick it up shortly.</p>
+              <p className="lede">We&rsquo;re still analyzing this complaint - our team will pick it up shortly.</p>
             )}
 
             {complaint.agentReply && (
