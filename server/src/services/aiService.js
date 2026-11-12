@@ -6,7 +6,9 @@ function timeoutMs() {
 
 // Throws on any failure (missing config, timeout, non-2xx, bad JSON) so the
 // caller decides what "the AI service is unavailable" should mean for a complaint.
-async function analyzeComplaint(text) {
+// options.timeoutMs lets a caller that can afford to wait (an admin re-running
+// the analysis) wait longer than a customer submitting a complaint.
+async function analyzeComplaint(text, options = {}) {
   const baseUrl = process.env.AI_SERVICE_URL;
   const serviceKey = process.env.AI_SERVICE_KEY;
   if (!baseUrl || !serviceKey) {
@@ -14,7 +16,7 @@ async function analyzeComplaint(text) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs());
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs || timeoutMs());
 
   try {
     const response = await fetch(`${baseUrl.replace(/\/$/, '')}/analyze`, {

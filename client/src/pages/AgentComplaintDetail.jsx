@@ -147,7 +147,7 @@ function AgentComplaintDetail() {
                 <>
                   <p className="lede">This complaint has no AI analysis yet.</p>
                   <button type="button" className="btn-primary" onClick={handleAnalyze} disabled={analyzing}>
-                    {analyzing ? 'Analysing… (up to 30 seconds)' : 'Run AI analysis'}
+                    {analyzing ? 'Analysing… (can take up to a minute)' : 'Run AI analysis'}
                   </button>
                   {analyzeError && (
                     <p className="form-error" role="alert">

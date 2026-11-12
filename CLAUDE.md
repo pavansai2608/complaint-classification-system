@@ -7,7 +7,7 @@ Deadline: early November 2026. Sprints are 2 weeks.
 ## Stack
 - client/: React (Vite) + Redux Toolkit + React Router + Recharts
 - server/: Node + Express + MongoDB (Mongoose), JWT access + refresh tokens, Google OAuth, bcrypt, Jest + Supertest tests
-- ai-service/: Python FastAPI + Pydantic, built with PyBuilder, tested with unittest. Category: scikit-learn (TF-IDF + Logistic Regression) trained on a public complaint dataset. Sentiment: pretrained Hugging Face DistilBERT. Priority: rules from category + sentiment + keywords. Suggested replies: Gemini free tier. Fine-tuning DistilBERT for category is a later stretch goal.
+- ai-service/: Python FastAPI + Pydantic, built with PyBuilder, tested with unittest. Category: scikit-learn (TF-IDF + Logistic Regression) trained on a public complaint dataset. Sentiment: pretrained Hugging Face DistilBERT locally, in Docker and Minikube; on Render's free plan the VADER word list (EMOTION_BACKEND=lexicon), because DistilBERT does not fit in 512 MB. Priority: rules from category + sentiment + keywords. Suggested replies: Gemini free tier. Fine-tuning DistilBERT for category is a later stretch goal.
 - e2e-tests/: Selenium in Python
 - k8s/: Kubernetes manifests for Minikube. Docker for every service.
 - Jenkinsfile at root: test → build images → deploy.

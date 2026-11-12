@@ -52,7 +52,7 @@ describe('createComplaint', () => {
 
     await createComplaint(baseInput);
 
-    expect(analyzeComplaint).toHaveBeenCalledWith(baseInput.description);
+    expect(analyzeComplaint).toHaveBeenCalledWith(baseInput.description, undefined);
     expect(Complaint.create).toHaveBeenCalledWith(
       expect.objectContaining({
         category: 'product',
@@ -392,7 +392,7 @@ describe('reanalyzeComplaint', () => {
 
     const result = await reanalyzeComplaint('c1');
 
-    expect(analyzeComplaint).toHaveBeenCalledWith('Charged twice');
+    expect(analyzeComplaint).toHaveBeenCalledWith('Charged twice', { timeoutMs: 90000 });
     expect(result.suggestedReply).toBe(aiResult.suggestedReply);
     expect(result.analysisPending).toBe(false);
     expect(doc.save).toHaveBeenCalled();
