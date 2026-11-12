@@ -194,13 +194,13 @@ Open `https://<ip-with-dashes>.nip.io` — the browser will show the padlock wit
 1. In Atlas, create a free cluster and a database user. Under Network Access, allow `0.0.0.0/0` (Render's free plan has no fixed outbound IP). Copy the connection string and add `/complaint_system` before the `?`.
 2. In Render, choose **New → Blueprint**, connect this GitHub repository and pick the branch. Render reads `render.yaml` and asks for the values marked `sync: false`:
    - `MONGODB_URI` - the Atlas string from step 1.
-   - `CLIENT_ORIGIN` - `https://complaint-triage-web.onrender.com`.
+   - `CLIENT_ORIGIN` - the client address, e.g. `https://complaint-triage-web-jvl8.onrender.com`.
    - `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` - the same OAuth Client ID. In Google Cloud Console, add the client address above to its **Authorized JavaScript origins**.
    - `AI_SERVICE_URL` and `AI_SERVICE_KEY` - leave empty unless the ai-service is deployed (below).
-3. After the first deploy, check the server's address in the Render dashboard. If it is not exactly `complaint-triage-server.onrender.com` (Render adds a suffix when a name is taken), change the `/api/*` destination in `render.yaml` and push. Do the same for `CLIENT_ORIGIN` if the client got a suffix.
+3. After the first deploy, check the server's address in the Render dashboard. Render adds a short suffix to each name (here `-jvl8`). If it is different, change the `/api/*` destination in `render.yaml` and push. Do the same for `CLIENT_ORIGIN` if the client got a suffix.
 4. Create the first admin from your machine against the Atlas database: `cd server && MONGODB_URI='<atlas string>' ADMIN_NAME=... ADMIN_EMAIL=... ADMIN_PASSWORD=... node src/scripts/createAdmin.js`.
 
-Check it with `curl https://complaint-triage-server.onrender.com/api/health`, which should return `"database":"connected"`.
+Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health`, which should return `"database":"connected"`.
 
 **Limits of the free plan.** A free service sleeps after 15 minutes without traffic, and the first request after that takes about a minute while it wakes. Pushes to the connected branch redeploy automatically.
 

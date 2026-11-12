@@ -34,7 +34,7 @@ services:
       # (it adds a suffix when the name is taken), change it here.
       - type: rewrite
         source: /api/*
-        destination: https://complaint-triage-server.onrender.com/api/*
+        destination: https://complaint-triage-server-jvl8.onrender.com/api/*
       # Single-page app: every other path is index.html, React Router takes over.
       - type: rewrite
         source: /*
@@ -83,7 +83,7 @@ services:
       - key: MONGODB_URI
         sync: false
       # The web address above, with https:// and no trailing slash,
-      # e.g. https://complaint-triage-web.onrender.com
+      # e.g. https://complaint-triage-web-jvl8.onrender.com
       - key: CLIENT_ORIGIN
         sync: false
       # Render makes up long random values for these two, different from each other.
