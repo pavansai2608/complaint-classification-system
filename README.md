@@ -187,6 +187,25 @@ Open `https://<ip-with-dashes>.nip.io` — the browser will show the padlock wit
 
 **Cost.** Stopping the instance (`aws ec2 stop-instances --instance-ids <id>`) when it's not being used or demoed costs almost nothing (just the EBS disk, a couple of dollars a month) - only a running instance is billed for compute. The Elastic IP stays attached across stop/start, so nothing needs reconfiguring when you start it again.
 
+## Run on Render
+
+`render.yaml` deploys the client and the server on Render's free plan. The client is a static site that forwards `/api/*` to the server, so the browser still talks to one address and the login cookie works as before. MongoDB is a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster, because Render has no MongoDB.
+
+1. In Atlas, create a free cluster and a database user. Under Network Access, allow `0.0.0.0/0` (Render's free plan has no fixed outbound IP). Copy the connection string and add `/complaint_system` before the `?`.
+2. In Render, choose **New → Blueprint**, connect this GitHub repository and pick the branch. Render reads `render.yaml` and asks for the values marked `sync: false`:
+   - `MONGODB_URI` - the Atlas string from step 1.
+   - `CLIENT_ORIGIN` - `https://complaint-triage-web.onrender.com`.
+   - `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` - the same OAuth Client ID. In Google Cloud Console, add the client address above to its **Authorized JavaScript origins**.
+   - `AI_SERVICE_URL` and `AI_SERVICE_KEY` - leave empty unless the ai-service is deployed (below).
+3. After the first deploy, check the server's address in the Render dashboard. If it is not exactly `complaint-triage-server.onrender.com` (Render adds a suffix when a name is taken), change the `/api/*` destination in `render.yaml` and push. Do the same for `CLIENT_ORIGIN` if the client got a suffix.
+4. Create the first admin from your machine against the Atlas database: `cd server && MONGODB_URI='<atlas string>' ADMIN_NAME=... ADMIN_EMAIL=... ADMIN_PASSWORD=... node src/scripts/createAdmin.js`.
+
+Check it with `curl https://complaint-triage-server.onrender.com/api/health`, which should return `"database":"connected"`.
+
+**Limits of the free plan.** A free service sleeps after 15 minutes without traffic, and the first request after that takes about a minute while it wakes. Pushes to the connected branch redeploy automatically.
+
+**The ai-service.** It is left out of `render.yaml` because PyTorch and the DistilBERT model need about 1.5 GB of memory, and free instances have 512 MB. Without it, complaints are still saved, with a default priority and no suggested reply. To add it, create a **Web Service** from this repository with Docker as the runtime, root directory `ai-service`, an instance with at least 2 GB of memory (a paid plan), and the variables from `ai-service/.env.example` plus `PORT=8000` and the Atlas `MONGODB_URI`. Then set `AI_SERVICE_URL` (its `https://...onrender.com` address) and the same `AI_SERVICE_KEY` on the server, and raise `AI_SERVICE_TIMEOUT_MS` to `30000` so a sleeping service has time to wake.
+
 ## Tests
 
 ```bash
