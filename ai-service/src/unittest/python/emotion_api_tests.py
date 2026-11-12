@@ -46,6 +46,14 @@ class EmotionApiTests(unittest.TestCase):
         urlopen.assert_not_called()
         self.assertEqual(result["label"], "positive")
 
+    def test_logs_why_the_api_failed_without_the_token(self):
+        with mock.patch("urllib.request.urlopen", side_effect=OSError("down")), self.assertLogs(
+            "app.emotion_model", level="WARNING"
+        ) as logs:
+            predict_emotion("Late parcel.")
+        self.assertIn("OSError: down", logs.output[0])
+        self.assertNotIn("test-token", logs.output[0])
+
     def test_never_loads_pytorch(self):
         with mock.patch("urllib.request.urlopen", return_value=fake_response(ANSWER)), mock.patch(
             "app.emotion_model.load_model"
