@@ -107,85 +107,24 @@ Credentials are scoped so that no component holds more than it needs. Mongo requ
 
 Note that the init script only runs when the data directory is empty. If you change the user passwords later, delete the claim (`kubectl delete pvc mongo-data`) to force a fresh initialisation — this wipes the database.
 
-## Run on AWS EC2 with k3s
+## Run on Render
 
-This is the actual production-style deployment (CCS-63) - a single EC2 instance running [k3s](https://k3s.io) (a lightweight Kubernetes distribution), reusing the same `k8s/` manifests as Minikube.
+`render.yaml` deploys the client and the server on Render's free plan. The client is a static site that forwards `/api/*` to the server, so the browser still talks to one address and the login cookie works as before. MongoDB is a free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster, because Render has no MongoDB.
 
-Requirements: an AWS account, the AWS CLI configured (`aws configure`), and an SSH key pair.
+1. In Atlas, create a free cluster and a database user. Under Network Access, allow `0.0.0.0/0` (Render's free plan has no fixed outbound IP). Copy the connection string and add `/complaint_system` before the `?`.
+2. In Render, choose **New → Blueprint**, connect this GitHub repository and pick the branch. Render reads `render.yaml` and asks for the values marked `sync: false`:
+   - `MONGODB_URI` - the Atlas string from step 1.
+   - `CLIENT_ORIGIN` - the client address, e.g. `https://complaint-triage-web-jvl8.onrender.com`.
+   - `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` - the same OAuth Client ID. In Google Cloud Console, add the client address above to its **Authorized JavaScript origins**.
+   - `AI_SERVICE_URL` and `AI_SERVICE_KEY` - leave empty unless the ai-service is deployed (below).
+3. After the first deploy, check the server's address in the Render dashboard. Render adds a short suffix to each name (here `-jvl8`). If it is different, change the `/api/*` destination in `render.yaml` and push. Do the same for `CLIENT_ORIGIN` if the client got a suffix.
+4. Create the first admin from your machine against the Atlas database: `cd server && MONGODB_URI='<atlas string>' ADMIN_NAME=... ADMIN_EMAIL=... ADMIN_PASSWORD=... node src/scripts/createAdmin.js`.
 
-```bash
-# Security group: SSH from your IP only, HTTP/HTTPS open to everyone
-aws ec2 create-key-pair --key-name ccs-ec2-key --query 'KeyMaterial' --output text > ~/.ssh/ccs-ec2-key.pem
-chmod 400 ~/.ssh/ccs-ec2-key.pem
-SG_ID=$(aws ec2 create-security-group --group-name ccs-ec2-sg --description "CCS-63" --vpc-id <default-vpc-id> --query 'GroupId' --output text)
-aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 22 --cidr "$(curl -s https://checkip.amazonaws.com)/32"
-aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 80 --cidr 0.0.0.0/0
-aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port 443 --cidr 0.0.0.0/0
+Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health`, which should return `"database":"connected"`.
 
-# Launch (use a free-tier-eligible type your account allows - check with
-# `aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true`)
-aws ec2 run-instances --image-id <ubuntu-22.04-ami-id> --instance-type <free-tier-type> \
-  --key-name ccs-ec2-key --security-group-ids "$SG_ID" \
-  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":20,"VolumeType":"gp3"}}]'
+**Limits of the free plan.** A free service sleeps after 15 minutes without traffic, and the first request after that takes about a minute while it wakes. Pushes to the connected branch redeploy automatically.
 
-# Elastic IP, so the address survives stop/start
-ALLOC_ID=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --output text)
-aws ec2 associate-address --instance-id <instance-id> --allocation-id "$ALLOC_ID"
-```
-
-On the instance:
-
-```bash
-ssh -i ~/.ssh/ccs-ec2-key.pem ubuntu@<elastic-ip>
-sudo apt-get update -y && sudo apt-get install -y docker.io
-curl -sfL https://get.k3s.io | sudo sh -
-```
-
-Copy the repo over (excluding `node_modules`, `.git`, and `ai-service/target`, which is PyBuilder's build/venv directory - the build only needs `src/`, `requirements.txt` and the Dockerfile), build the three images with plain `docker build` the same way `client/Dockerfile`, `server/Dockerfile` and `ai-service/Dockerfile` are built anywhere else, then load them into k3s's own containerd (k3s doesn't share Docker's image store, the same reason Minikube needs `minikube image load`):
-
-```bash
-sudo docker build -t complaint-server:local ./server
-sudo docker build --build-arg VITE_GOOGLE_CLIENT_ID=<your-client-id> -t complaint-client:local ./client
-sudo docker build -t complaint-ai-service:local ./ai-service
-sudo docker save complaint-server:local complaint-client:local complaint-ai-service:local | sudo k3s ctr images import -
-```
-
-**HTTPS.** The deployment uses [nip.io](https://nip.io) to get a free hostname (`<ip-with-dashes>.nip.io`) that resolves to the Elastic IP, and Traefik's built-in ACME resolver issues a real Let's Encrypt certificate for it — no browser warnings, auto-renewed. The Traefik config is applied by the Jenkinsfile during deploy, or can be placed manually:
-
-```bash
-sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml <<'EOF'
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  valuesContent: |
-    additionalArguments:
-      - --certificatesresolvers.le.acme.httpchallenge=true
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.le.acme.email=<your-email>
-      - --certificatesresolvers.le.acme.storage=/data/acme.json
-    persistence:
-      enabled: true
-      path: /data
-      size: 128Mi
-EOF
-```
-
-**Secrets and config.** Same idea as `k8s/secret.yaml` for Minikube (copy `k8s/secret.example.yaml`, fill in real values, `kubectl apply`).
-
-Then apply everything:
-
-```bash
-sudo k3s kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
-sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.yaml -f k8s/client.yaml
-sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
-```
-
-Open `https://<ip-with-dashes>.nip.io` — the browser will show the padlock with no warnings. Check pods with `sudo k3s kubectl get pods` - all should be `Running`.
-
-**Cost.** Stopping the instance (`aws ec2 stop-instances --instance-ids <id>`) when it's not being used or demoed costs almost nothing (just the EBS disk, a couple of dollars a month) - only a running instance is billed for compute. The Elastic IP stays attached across stop/start, so nothing needs reconfiguring when you start it again.
+**The ai-service.** It is left out of `render.yaml` because PyTorch and the DistilBERT model need about 1.5 GB of memory, and free instances have 512 MB. Without it, complaints are still saved, with a default priority and no suggested reply. To add it, create a **Web Service** from this repository with Docker as the runtime, root directory `ai-service`, an instance with at least 2 GB of memory (a paid plan), and the variables from `ai-service/.env.example` plus `PORT=8000` and the Atlas `MONGODB_URI`. Then set `AI_SERVICE_URL` (its `https://...onrender.com` address) and the same `AI_SERVICE_KEY` on the server, and raise `AI_SERVICE_TIMEOUT_MS` to `30000` so a sleeping service has time to wake.
 
 ## Tests
 
@@ -197,20 +136,17 @@ cd ai-service && source .venv/bin/activate && pyb
 
 ## Continuous integration
 
-A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), **Deploy** (SSHes into the EC2/k3s instance (CCS-63), copies the repo over, builds the three images there and loads them into k3s the same way the README's manual steps above do, then applies the `k8s/` manifests and restarts the deployments), and **E2E (Selenium)** (drives the real browser flows against the app's public HTTPS address, right after it was just deployed).
+A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), and **E2E (Selenium)** (drives the real browser flows against the live Render site). There is no deploy stage: Render redeploys the connected branch by itself on every push (see [Run on Render](#run-on-render)).
 
-A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vulnerability stops the pipeline before anything is deployed. **Deploy only runs on `main`** - feature branches are tested, built and scanned, but never touch the running instance. The EC2 instance has to actually be running for Deploy to succeed - if it's stopped to save cost between work sessions, a push during that window just fails safely rather than silently deploying nothing.
+A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vulnerability fails the pipeline. **E2E only runs on `main`**; feature branches are tested, built and scanned.
 
 To set this up on a Jenkins instance:
 
-1. Install the **Docker Pipeline** plugin (for the `agent { docker { ... } }` blocks), the **GitHub Branch Source** plugin, and the **SSH Credentials** plugin (most Jenkins installs already have it).
+1. Install the **Docker Pipeline** plugin (for the `agent { docker { ... } }` blocks) and the **GitHub Branch Source** plugin.
 2. New Item → **Multibranch Pipeline**, point it at this repo's URL, and set the script path to `Jenkinsfile` (the default).
 3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
-4. Under **Manage Jenkins → Credentials**, add these, referenced by ID in the `Jenkinsfile` and never written into it directly:
-   - `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
-   - `ec2-ssh-key` (SSH Username with private key) - the same `ccs-ec2-key.pem` used to SSH into the EC2 instance by hand, username `ubuntu`.
-   - `ec2-host` (Secret text) - the EC2 instance's Elastic IP.
-5. The Jenkins host needs `ssh` and `rsync` on its `PATH` and access to the Docker socket the images were built on.
+4. Under **Manage Jenkins → Credentials**, add `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
+5. The Jenkins host needs `curl` and `python3` on its `PATH` and access to the Docker socket.
 
 ## Contributing
 

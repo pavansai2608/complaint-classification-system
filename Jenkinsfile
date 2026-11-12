@@ -150,99 +150,32 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            // Only main deploys. Feature branches still get tested, built and
-            // scanned, but must not touch the running cluster.
-            //
-            // Targets the EC2/k3s box (CCS-63), not Minikube - Minikube only
-            // ever existed on one person's laptop, so it was never a real
-            // deployment target. k3s doesn't share a Docker daemon with this
-            // Jenkins host, so instead of loading a locally-built image in,
-            // this builds the images directly on the EC2 box over SSH - the
-            // same commands a person would run by hand (see the README),
-            // just scripted. The instance has to be running for this to
-            // succeed; if it's stopped to save cost between sessions, this
-            // stage just fails safely rather than deploying nothing silently.
-            when { branch 'main' }
-            agent any
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'EC2_SSH_KEY', usernameVariable: 'EC2_SSH_USER'),
-                    string(credentialsId: 'ec2-host', variable: 'EC2_HOST'),
-                    string(credentialsId: 'google-client-id', variable: 'GOOGLE_CLIENT_ID'),
-                ]) {
-                    sh '''
-                        SSH="ssh -i $EC2_SSH_KEY -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
-
-                        tar --exclude='./.git' --exclude='./ai-service/target' \
-                            --exclude='./ai-service/__pycache__' \
-                            --exclude='./server/node_modules' --exclude='./client/node_modules' \
-                            --exclude='./client/dist' -czf /tmp/ccs-deploy.tar.gz .
-                        rsync -az -e "$SSH" /tmp/ccs-deploy.tar.gz $EC2_SSH_USER@$EC2_HOST:/home/$EC2_SSH_USER/ccs-deploy.tar.gz
-
-                        $SSH $EC2_SSH_USER@$EC2_HOST "
-                            rm -rf ~/app && mkdir -p ~/app && tar -xzf ccs-deploy.tar.gz -C ~/app && rm ccs-deploy.tar.gz
-                            cd ~/app
-                            sudo docker build --pull --build-arg OS_PATCH_DATE=$(date +%Y-%m-%d) -t complaint-server:local ./server
-                            sudo docker build --pull --build-arg OS_PATCH_DATE=$(date +%Y-%m-%d) -t complaint-ai-service:local ./ai-service
-                            sudo docker build --pull --build-arg OS_PATCH_DATE=$(date +%Y-%m-%d) --build-arg VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID -t complaint-client:local ./client
-                            sudo docker save complaint-server:local complaint-ai-service:local complaint-client:local | sudo k3s ctr images import -
-
-                            # Traefik ACME config for auto-renewing Let's Encrypt certs
-                            sudo tee /var/lib/rancher/k3s/server/manifests/traefik-config.yaml <<TRAEFIKCFG
-apiVersion: helm.cattle.io/v1
-kind: HelmChartConfig
-metadata:
-  name: traefik
-  namespace: kube-system
-spec:
-  valuesContent: |
-    additionalArguments:
-      - --certificatesresolvers.le.acme.httpchallenge=true
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.le.acme.email=golipavansaikrishna2608@gmail.com
-      - --certificatesresolvers.le.acme.storage=/data/acme.json
-    persistence:
-      enabled: true
-      path: /data
-      size: 128Mi
-TRAEFIKCFG
-
-                            sudo k3s kubectl apply -f k8s/configmap.yaml -f k8s/mongo-init.yaml
-                            sudo k3s kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.yaml -f k8s/client.yaml
-                            sudo k3s kubectl apply -f k8s/ingress-ec2.yaml
-
-                            sudo k3s kubectl rollout restart deployment/server deployment/ai-service deployment/client
-                            sudo k3s kubectl rollout status deployment/server --timeout=300s
-                            sudo k3s kubectl rollout status deployment/ai-service --timeout=600s
-                            sudo k3s kubectl rollout status deployment/client --timeout=300s
-                        "
-                    '''
-                }
-            }
-        }
-
         stage('E2E (Selenium)') {
-            // Drives the real browser flows (register, log in, submit a
-            // complaint) against the app that was just deployed above, over
-            // its real public HTTPS address - the same way a person would
-            // use it. No port-forward needed now that the deploy target is
-            // a reachable EC2 box rather than a local-only Minikube cluster.
+            // Render deploys the connected branch by itself on every push
+            // (see render.yaml), so Jenkins no longer has a deploy step.
+            // This drives the real browser flows (register, log in, submit a
+            // complaint) against the live Render site. It first waits for
+            // the server to answer, because a free Render service sleeps
+            // after 15 minutes without traffic.
             when { branch 'main' }
             agent any
+            environment {
+                APP_URL = 'https://complaint-triage-web-jvl8.onrender.com'
+            }
             steps {
-                withCredentials([string(credentialsId: 'ec2-host', variable: 'EC2_HOST')]) {
-                    sh '''
-                        cd e2e-tests
-                        python3 -m venv .venv
-                        . .venv/bin/activate
-                        pip install --no-cache-dir -r requirements.txt
-                        DEPLOY_HOST=$(echo $EC2_HOST | tr '.' '-').nip.io
-                        CLIENT_BASE_URL=https://$DEPLOY_HOST \
-                        SERVER_BASE_URL=https://$DEPLOY_HOST \
-                            python -m unittest discover -p "*_tests.py" -v
-                    '''
-                }
+                sh '''
+                    for i in $(seq 1 30); do
+                        curl -sf "$APP_URL/api/health" && break
+                        sleep 10
+                    done
+                    cd e2e-tests
+                    python3 -m venv .venv
+                    . .venv/bin/activate
+                    pip install --no-cache-dir -r requirements.txt
+                    CLIENT_BASE_URL=$APP_URL \
+                    SERVER_BASE_URL=$APP_URL \
+                        python -m unittest discover -p "*_tests.py" -v
+                '''
             }
         }
     }

@@ -54,7 +54,7 @@ Skipped on purpose: framework code, simple getters, and pure styling.
 | Local machine | Daily development and all test levels | |
 | Jenkins CI | Runs all tests on every push, then builds images and scans them | CCS-50, CCS-61 |
 | Minikube | Full system in containers, end-to-end and ZAP scan | CCS-60 |
-| AWS EC2 with k3s | Final deployed check before the demo | CCS-63 |
+| Render (client and server) with MongoDB Atlas | The live site, and the end-to-end run after each push to `main` | CCS-79 |
 
 ## 6. How to run everything
 
