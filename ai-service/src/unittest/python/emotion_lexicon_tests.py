@@ -54,6 +54,20 @@ class EmotionLexiconTests(unittest.TestCase):
     def test_curly_apostrophe_in_a_problem_phrase_is_recognised(self):
         self.assertEqual(predict_emotion("The app won\u2019t load.")["label"], "negative")
 
+    def test_page_problem_is_negative(self):
+        text = (
+            "Every time I open the account settings page it spins forever and then shows a blank screen. "
+            "I've tried two different browsers and cleared the cache."
+        )
+        self.assertEqual(predict_emotion(text)["label"], "negative")
+
+    def test_missing_parcel_reported_again_is_negative(self):
+        text = (
+            "The tracking page says my package was delivered, but there is nothing here. "
+            "I checked with building security too. This is the second time this has happened this month."
+        )
+        self.assertEqual(predict_emotion(text)["label"], "negative")
+
     def test_does_not_load_the_transformer_model(self):
         with mock.patch("app.emotion_model.load_model") as load_model:
             predict_emotion("The parcel was late.")
