@@ -1,3 +1,4 @@
+import logging
 import os
 
 from google import genai
@@ -5,6 +6,8 @@ from google.genai import types
 from groq import Groq
 
 from app.grounding import find_similar_complaints
+
+logger = logging.getLogger("uvicorn.error")
 
 DEFAULT_MODEL_NAME = "gemini-3.6-flash"
 DEFAULT_GROQ_MODEL_NAME = "openai/gpt-oss-120b"
@@ -140,7 +143,9 @@ def _generate_with(call, source: str, complaint_text: str, category: str, priori
             if _looks_unsafe(reply):
                 return None
             return {"reply": reply, "source": source}
-        except Exception:
+        except Exception as error:
+            # Only the error type and a short message, never the request.
+            logger.warning("%s reply failed: %s: %s", source, type(error).__name__, str(error)[:200])
             if attempt == MAX_ATTEMPTS - 1:
                 return None
     return None
