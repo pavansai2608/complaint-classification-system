@@ -4,6 +4,7 @@ jest.mock('../src/models/Complaint', () => ({
   countDocuments: jest.fn(),
   findByIdAndUpdate: jest.fn(),
   findById: jest.fn(),
+  updateOne: jest.fn(),
 }));
 jest.mock('../src/services/aiService', () => ({ analyzeComplaint: jest.fn() }));
 
@@ -36,10 +37,28 @@ const baseInput = {
   orderReference: 'ORD-1234',
 };
 
+// Lets the background analysis started by createComplaint finish.
+const flushBackgroundWork = () => new Promise((resolve) => setImmediate(resolve));
+
 describe('createComplaint', () => {
   afterEach(() => jest.clearAllMocks());
 
-  it('saves the AI analysis results when the AI service responds', async () => {
+  it('saves the complaint straight away, marked as analysis pending', async () => {
+    analyzeComplaint.mockReturnValueOnce(new Promise(() => {}));
+    Complaint.create.mockResolvedValueOnce({ id: 'complaint-1' });
+
+    const result = await createComplaint(baseInput);
+
+    expect(result).toEqual({ id: 'complaint-1' });
+    expect(Complaint.create).toHaveBeenCalledWith(
+      expect.objectContaining({ title: baseInput.title, priority: 'Medium', analysisPending: true }),
+    );
+    const savedArgs = Complaint.create.mock.calls[0][0];
+    expect(savedArgs.category).toBeUndefined();
+    expect(savedArgs.suggestedReply).toBeUndefined();
+  });
+
+  it('fills in the AI analysis in the background when the AI service responds', async () => {
     analyzeComplaint.mockResolvedValueOnce({
       category: 'product',
       confidence: 0.92,
@@ -48,56 +67,43 @@ describe('createComplaint', () => {
       priority: 'High',
       suggestedReply: 'Sorry about the damage, we are on it.',
     });
-    Complaint.create.mockResolvedValueOnce({ id: 'complaint-1' });
+    Complaint.create.mockResolvedValueOnce({ id: 'complaint-2' });
+    Complaint.updateOne.mockResolvedValueOnce({ modifiedCount: 1 });
 
     await createComplaint(baseInput);
+    await flushBackgroundWork();
 
     expect(analyzeComplaint).toHaveBeenCalledWith(baseInput.description, undefined);
-    expect(Complaint.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        category: 'product',
-        confidence: 0.92,
-        needsReview: false,
-        emotion: { label: 'negative', score: 0.81 },
-        priority: 'High',
-        suggestedReply: 'Sorry about the damage, we are on it.',
-        analysisPending: false,
-      }),
+    expect(Complaint.updateOne).toHaveBeenCalledWith(
+      { _id: 'complaint-2', analysisPending: true, agentReply: null },
+      {
+        $set: expect.objectContaining({
+          category: 'product',
+          priority: 'High',
+          suggestedReply: 'Sorry about the damage, we are on it.',
+          analysisPending: false,
+        }),
+      },
     );
   });
 
-  it('still saves the complaint with a default priority when the AI service times out', async () => {
+  it('leaves the complaint pending when the AI service fails', async () => {
     analyzeComplaint.mockRejectedValueOnce(new Error('The operation was aborted'));
-    Complaint.create.mockResolvedValueOnce({ id: 'complaint-2' });
-
-    const result = await createComplaint(baseInput);
-
-    expect(result).toEqual({ id: 'complaint-2' });
-    expect(Complaint.create).toHaveBeenCalledWith(
-      expect.objectContaining({ priority: 'Medium', analysisPending: true }),
-    );
-  });
-
-  it('still saves the complaint when the AI service errors', async () => {
-    analyzeComplaint.mockRejectedValueOnce(new Error('AI service responded with status 500'));
     Complaint.create.mockResolvedValueOnce({ id: 'complaint-3' });
 
     await createComplaint(baseInput);
+    await flushBackgroundWork();
 
-    expect(Complaint.create).toHaveBeenCalledWith(
-      expect.objectContaining({ priority: 'Medium', analysisPending: true }),
-    );
+    expect(Complaint.updateOne).not.toHaveBeenCalled();
   });
 
-  it('never sends unanalyzed fields to the database on failure', async () => {
-    analyzeComplaint.mockRejectedValueOnce(new Error('AI service is not configured'));
+  it('does not throw when saving the background analysis fails', async () => {
+    analyzeComplaint.mockResolvedValueOnce({ category: 'billing', priority: 'High', suggestedReply: 'Sorry.' });
     Complaint.create.mockResolvedValueOnce({ id: 'complaint-4' });
+    Complaint.updateOne.mockRejectedValueOnce(new Error('connection lost'));
 
-    await createComplaint(baseInput);
-
-    const savedArgs = Complaint.create.mock.calls[0][0];
-    expect(savedArgs.category).toBeUndefined();
-    expect(savedArgs.suggestedReply).toBeUndefined();
+    await expect(createComplaint(baseInput)).resolves.toEqual({ id: 'complaint-4' });
+    await flushBackgroundWork();
   });
 });
 

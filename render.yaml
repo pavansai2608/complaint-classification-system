@@ -105,11 +105,11 @@ services:
           type: web
           name: complaint-triage-ai
           envVarKey: AI_SERVICE_KEY
-      # A sleeping free ai-service takes a while to wake. The customer waits for
-      # this call when submitting, so cap it at 30 s; if it runs out, the
-      # complaint is still saved with a default priority.
+      # How long the background analysis of a new complaint waits for the
+      # ai-service: a sleeping free ai-service takes a while to wake, and
+      # Gemini can be slow. The customer does not wait for it.
       - key: AI_SERVICE_TIMEOUT_MS
-        value: "30000"
+        value: "90000"
 
   # The FastAPI ai-service: category, sentiment, priority and suggested reply.
   # Only the server calls it, with the shared AI_SERVICE_KEY.
