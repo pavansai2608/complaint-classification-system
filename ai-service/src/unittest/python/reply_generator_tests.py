@@ -52,6 +52,16 @@ class ReplyGeneratorTests(unittest.TestCase):
         self.assertIn("billing", result["reply"])
 
     @patch("app.reply_generator.find_similar_complaints", return_value=[])
+    @patch("app.reply_generator._groq_client")
+    @patch("app.reply_generator._client")
+    def test_provider_failure_is_logged_with_the_reason(self, mock_gemini_client, mock_groq_client, mock_similar):
+        mock_gemini_client.return_value.models.generate_content.side_effect = TimeoutError("timed out")
+        mock_groq_client.return_value.chat.completions.create.side_effect = TimeoutError("timed out")
+        with self.assertLogs("uvicorn.error", level="WARNING") as logs:
+            generate_suggested_reply("I was charged twice", "billing", "Medium")
+        self.assertIn("gemini reply failed: TimeoutError: timed out", logs.output[0])
+
+    @patch("app.reply_generator.find_similar_complaints", return_value=[])
     @patch("app.reply_generator._client")
     def test_leaked_delimiters_in_output_fall_back_instead_of_returning_the_leak(self, mock_client, mock_similar):
         mock_client.return_value.models.generate_content.return_value = _mock_response(
