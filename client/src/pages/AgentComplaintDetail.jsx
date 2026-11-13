@@ -47,8 +47,9 @@ function AgentComplaintDetail() {
     }
   }, [id])
 
-  // For a complaint saved before the AI service answered: run the analysis
-  // now and fill the form with its category, priority and suggested reply.
+  // Runs the analysis now and fills the form with its category, priority
+  // and suggested reply: for a complaint saved before the AI service
+  // answered, or to get a new suggested reply for one not replied to yet.
   async function handleAnalyze() {
     setAnalyzeError('')
     setAnalyzing(true)
@@ -143,11 +144,22 @@ function AgentComplaintDetail() {
                 <strong>AI emotion:</strong>{' '}
                 {complaint.emotion?.label ? `${complaint.emotion.label} (${complaint.emotion.score})` : 'Not analyzed'}
               </p>
-              {(complaint.analysisPending || !complaint.category) && (
+              {complaint.status !== 'Resolved' && (
                 <>
-                  <p className="lede">This complaint has no AI analysis yet.</p>
+                  {complaint.analysisPending || !complaint.category ? (
+                    <p className="lede">This complaint has no AI analysis yet.</p>
+                  ) : (
+                    <p className="lede">
+                      Running the analysis again replaces the category, priority and reply below with a new
+                      suggestion.
+                    </p>
+                  )}
                   <button type="button" className="btn-primary" onClick={handleAnalyze} disabled={analyzing}>
-                    {analyzing ? 'Analysing… (can take up to a minute)' : 'Run AI analysis'}
+                    {analyzing
+                      ? 'Analysing… (can take up to a minute)'
+                      : complaint.analysisPending || !complaint.category
+                        ? 'Run AI analysis'
+                        : 'Run AI analysis again'}
                   </button>
                   {analyzeError && (
                     <p className="form-error" role="alert">

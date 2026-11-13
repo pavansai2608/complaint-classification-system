@@ -52,15 +52,17 @@ async function getComplaintById(complaintId) {
   return Complaint.findById(complaintId);
 }
 
-// Runs the AI analysis for a complaint that was saved without one (the AI
-// service was down, asleep or not deployed yet). Only fills in missing
-// analysis - a complaint that already has one is left alone, so an admin's
-// corrections are never overwritten. Returns null if it doesn't exist.
+// Runs the AI analysis for a complaint that has not been replied to yet:
+// one saved without an analysis (the AI service was down, asleep or not
+// deployed yet), or one whose suggested reply the admin wants written again.
+// It replaces the category, sentiment, priority and suggested reply. A
+// replied complaint keeps the analysis it was resolved with. Returns null if
+// the complaint doesn't exist.
 async function reanalyzeComplaint(complaintId) {
   const complaint = await Complaint.findById(complaintId);
   if (!complaint) return null;
-  if (complaint.category && !complaint.analysisPending) {
-    throw new ApiError(409, 'ALREADY_ANALYZED', 'This complaint already has an AI analysis.');
+  if (complaint.agentReply || complaint.status === 'Resolved') {
+    throw new ApiError(409, 'ALREADY_REPLIED', 'This complaint has already been replied to.');
   }
 
   // The admin is waiting on purpose, so give a sleeping ai-service time to

@@ -124,12 +124,25 @@ describe('AgentComplaintDetail', () => {
     expect(await screen.findByText('The AI service did not answer. Please try again in a minute.')).toBeInTheDocument()
   })
 
-  it('does not offer the AI analysis button when the complaint is already analysed', async () => {
+  it('runs the AI analysis again for an analysed complaint and replaces the suggested reply', async () => {
     apiClient.get.mockResolvedValueOnce({ data: { complaint } })
+    apiClient.post.mockResolvedValueOnce({
+      data: { complaint: { ...complaint, suggestedReply: 'We are sending a replacement today.' } },
+    })
+
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: 'Run AI analysis again' }))
+
+    expect(await screen.findByDisplayValue('We are sending a replacement today.')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith(`/api/complaints/${complaint._id}/analyze`)
+  })
+
+  it('does not offer the AI analysis button once the complaint is resolved', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: { complaint: { ...complaint, status: 'Resolved' } } })
 
     renderPage()
     await screen.findByText('Order arrived damaged')
-    expect(screen.queryByRole('button', { name: 'Run AI analysis' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Run AI analysis/ })).not.toBeInTheDocument()
   })
 
   it('shows a not-found message for a complaint that does not exist', async () => {
