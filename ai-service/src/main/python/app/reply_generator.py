@@ -9,9 +9,9 @@ from app.grounding import find_similar_complaints
 
 logger = logging.getLogger("uvicorn.error")
 
-DEFAULT_MODEL_NAME = "gemini-3.6-flash"
+DEFAULT_MODEL_NAME = "gemini-3.5-flash-lite"
 # Asked when the main model is busy or slow.
-DEFAULT_BACKUP_MODEL_NAME = "gemini-3.5-flash-lite"
+DEFAULT_BACKUP_MODEL_NAME = "gemini-3.6-flash"
 DEFAULT_GROQ_MODEL_NAME = "openai/gpt-oss-120b"
 MAX_COMPLAINT_CHARS = 2000
 

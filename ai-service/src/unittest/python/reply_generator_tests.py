@@ -60,8 +60,8 @@ class ReplyGeneratorTests(unittest.TestCase):
         generate.side_effect = [RuntimeError("503 UNAVAILABLE"), backup_answer]
         result = generate_suggested_reply("Order arrived damaged", "product", "Medium")
         self.assertEqual(result, {"reply": "Sorry about the damaged order, we are looking into it.", "source": "gemini"})
-        self.assertEqual(generate.call_args_list[0].kwargs["model"], "gemini-3.6-flash")
-        self.assertEqual(generate.call_args_list[1].kwargs["model"], "gemini-3.5-flash-lite")
+        self.assertEqual(generate.call_args_list[0].kwargs["model"], "gemini-3.5-flash-lite")
+        self.assertEqual(generate.call_args_list[1].kwargs["model"], "gemini-3.6-flash")
         mock_groq_client.assert_not_called()
         for call in generate.call_args_list:
             self.assertEqual(call.kwargs["config"].thinking_config.thinking_level, "MINIMAL")
