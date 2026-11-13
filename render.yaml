@@ -1,12 +1,11 @@
-# Render Blueprint: the client and the server, both on the free plan.
+# Render Blueprint: the client, the server and the ai-service, on the free plan.
 #
 # MongoDB is not here - Render has no MongoDB, so the database is a free
 # MongoDB Atlas cluster and MONGODB_URI points at it.
 #
-# The ai-service runs here too, on the free plan, with EMOTION_BACKEND=lexicon:
-# the DistilBERT sentiment model needs PyTorch and about 1.5 GB of memory, and
-# free instances have 512 MB, so on Render the tone is read with the VADER
-# word list instead. The category model (scikit-learn) still runs here.
+# The ai-service uses EMOTION_BACKEND=lexicon: the sentiment comes from the
+# VADER word list, the category from the trained scikit-learn model, and the
+# suggested reply from Gemini.
 #
 # Every value marked `sync: false` is asked for once, when the Blueprint is
 # first created in the Render dashboard. Secrets never go in this file.
@@ -127,7 +126,7 @@ services:
         value: "3.11.11"
       - key: PYTHONPATH
         value: src/main/python
-      # Sentiment from the VADER word list (DistilBERT does not fit in 512 MB).
+      # Sentiment from the VADER word list.
       - key: EMOTION_BACKEND
         value: lexicon
       # Render makes up a long random value; the server reads the same one.
