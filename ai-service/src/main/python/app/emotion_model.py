@@ -7,7 +7,7 @@ from functools import lru_cache
 #   by us), 3-class sentiment trained on the multilingual-sentiments
 #   dataset.
 # - "lexicon": VADER, a word list with rules for negation, capitals and
-#   "!!!". English only.
+#   "!!!", plus the complaint wording below. English only.
 #
 # Both return the same shape: {"label": positive|neutral|negative, "score"}.
 DEFAULT_MODEL_NAME = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
@@ -22,6 +22,32 @@ MAX_INPUT_CHARS = 2000
 # VADER's own recommended cut-offs for its compound score (-1 to 1).
 LEXICON_POSITIVE_FROM = 0.05
 LEXICON_NEGATIVE_FROM = -0.05
+
+# Complaint wording for the VADER word list.
+# Polite words carry no feeling inside a complaint ("please refund me",
+# "I would like help"), so they score 0.
+COMPLAINT_NEUTRAL_WORDS = (
+    "please", "thank", "thanks", "kindly", "support", "help", "want", "hope",
+    "appreciate", "like", "sure", "ok", "okay", "resolve", "resolved",
+)
+# Complaint words, scored on VADER's -4 to 4 scale.
+COMPLAINT_NEGATIVE_WORDS = {
+    "refund": -1.5,
+    "overcharged": -2.0,
+    "late": -1.2,
+    "unresolved": -1.5,
+}
+# Phrases that describe something going wrong without a feeling word
+# ("the parcel never arrived"). Each text containing one is pushed this far
+# towards negative.
+PROBLEM_PHRASES = (
+    "never arrived", "nothing arrived", "not arrived", "did not arrive", "didn't arrive",
+    "not received", "never received", "not delivered", "never delivered",
+    "will not load", "won't load", "does not load", "doesn't load",
+    "not working", "stopped working", "does not work", "doesn't work",
+    "charged twice", "no response", "nobody has replied", "no one has replied",
+)
+PROBLEM_PHRASE_PENALTY = 0.4
 
 
 def _model_name() -> str:
@@ -46,11 +72,23 @@ def load_model():
 def load_lexicon():
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-    return SentimentIntensityAnalyzer()
+    analyzer = SentimentIntensityAnalyzer()
+    for word in COMPLAINT_NEUTRAL_WORDS:
+        analyzer.lexicon.pop(word, None)
+    analyzer.lexicon.update(COMPLAINT_NEGATIVE_WORDS)
+    return analyzer
+
+
+def _mentions_a_problem(text: str) -> bool:
+    lowered = text.lower().replace("\u2019", "'")
+    return any(phrase in lowered for phrase in PROBLEM_PHRASES)
 
 
 def _predict_with_lexicon(text: str) -> dict:
-    compound = load_lexicon().polarity_scores(text[:MAX_INPUT_CHARS])["compound"]
+    text = text[:MAX_INPUT_CHARS]
+    compound = load_lexicon().polarity_scores(text)["compound"]
+    if _mentions_a_problem(text):
+        compound = max(-1.0, compound - PROBLEM_PHRASE_PENALTY)
     if compound >= LEXICON_POSITIVE_FROM:
         label = "positive"
     elif compound <= LEXICON_NEGATIVE_FROM:

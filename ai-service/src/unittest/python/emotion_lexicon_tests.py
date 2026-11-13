@@ -39,6 +39,21 @@ class EmotionLexiconTests(unittest.TestCase):
         text = "This is absolutely unacceptable, I am furious and demand a refund right now."
         self.assertEqual(determine_priority("delivery", predict_emotion(text), text), "High")
 
+    def test_problem_phrase_without_feeling_words_is_negative(self):
+        result = predict_emotion("Delivery marked complete but nothing arrived.")
+        self.assertEqual(result["label"], "negative")
+
+    def test_polite_words_do_not_make_a_complaint_positive(self):
+        result = predict_emotion("I was charged twice for my order, please refund the extra charge.")
+        self.assertEqual(result["label"], "negative")
+
+    def test_problem_phrase_alone_gives_medium_priority(self):
+        text = "My package never arrived."
+        self.assertEqual(determine_priority("delivery", predict_emotion(text), text), "Medium")
+
+    def test_curly_apostrophe_in_a_problem_phrase_is_recognised(self):
+        self.assertEqual(predict_emotion("The app won\u2019t load.")["label"], "negative")
+
     def test_does_not_load_the_transformer_model(self):
         with mock.patch("app.emotion_model.load_model") as load_model:
             predict_emotion("The parcel was late.")
