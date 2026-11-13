@@ -135,7 +135,7 @@ Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health
 
 Docker, Minikube and local runs use `EMOTION_BACKEND=transformer` (DistilBERT, run inside the service) for the sentiment.
 
-The server waits up to `AI_SERVICE_TIMEOUT_MS` (30 s) for the ai-service. If a sleeping ai-service takes longer to wake, the complaint is still saved, with a default priority and no suggested reply; the next one is analysed normally. For any complaint saved without an analysis (including ones from before the ai-service was deployed), the admin opens it and selects **Run AI analysis**: the server calls the ai-service again, waiting up to 90 s so a sleeping ai-service can wake, (`POST /api/complaints/:id/analyze`, admin only) and fills in the category, sentiment, priority and suggested reply. A complaint that already has an analysis is never overwritten.
+The server waits up to `AI_SERVICE_TIMEOUT_MS` (30 s) for the ai-service. If a sleeping ai-service takes longer to wake, the complaint is still saved, with a default priority and no suggested reply; the next one is analysed normally. For any complaint saved without an analysis (including ones from before the ai-service was deployed), the admin opens it and selects **Run AI analysis**. For a complaint that already has an analysis but no reply yet, **Run AI analysis again** gets a new suggestion, for example when the suggested reply is the fixed template. Both call the ai-service again, waiting up to 90 s so a sleeping ai-service can wake, (`POST /api/complaints/:id/analyze`, admin only) and fill in the category, sentiment, priority and suggested reply. A complaint that has been replied to keeps its analysis (409 `ALREADY_REPLIED`).
 
 ## Tests
 

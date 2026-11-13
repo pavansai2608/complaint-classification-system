@@ -398,10 +398,32 @@ describe('reanalyzeComplaint', () => {
     expect(doc.save).toHaveBeenCalled();
   });
 
-  it('refuses to overwrite a complaint that already has an analysis', async () => {
-    Complaint.findById.mockResolvedValueOnce(fakeComplaintDoc({ category: 'billing', analysisPending: false }));
+  it('runs the analysis again for an analysed complaint that has not been replied to', async () => {
+    const doc = fakeComplaintDoc({
+      id: 'c1',
+      description: 'Charged twice',
+      category: 'billing',
+      analysisPending: false,
+      status: 'Open',
+      agentReply: null,
+      suggestedReply: 'Thank you for reaching out about your billing complaint.',
+    });
+    doc.set = jest.fn((fields) => Object.assign(doc, fields));
+    Complaint.findById.mockResolvedValueOnce(doc);
+    analyzeComplaint.mockResolvedValueOnce(aiResult);
 
-    await expect(reanalyzeComplaint('c1')).rejects.toMatchObject({ statusCode: 409 });
+    const result = await reanalyzeComplaint('c1');
+
+    expect(result.suggestedReply).toBe(aiResult.suggestedReply);
+    expect(doc.save).toHaveBeenCalled();
+  });
+
+  it('refuses to change a complaint that has already been replied to', async () => {
+    Complaint.findById.mockResolvedValueOnce(
+      fakeComplaintDoc({ category: 'billing', status: 'Resolved', agentReply: 'We refunded you.' }),
+    );
+
+    await expect(reanalyzeComplaint('c1')).rejects.toMatchObject({ statusCode: 409, code: 'ALREADY_REPLIED' });
     expect(analyzeComplaint).not.toHaveBeenCalled();
   });
 
