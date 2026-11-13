@@ -54,7 +54,7 @@ def _judge_with_gemini(prompt: str) -> str:
         config=types.GenerateContentConfig(
             system_instruction=JUDGE_INSTRUCTION,
             temperature=0,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL),
             http_options=types.HttpOptions(timeout=10_000),
         ),
     )
