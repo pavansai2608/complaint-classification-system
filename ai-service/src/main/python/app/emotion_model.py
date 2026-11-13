@@ -5,11 +5,9 @@ from functools import lru_cache
 #
 # - "transformer" (default): a pretrained DistilBERT model (not fine-tuned
 #   by us), 3-class sentiment trained on the multilingual-sentiments
-#   dataset. Most accurate, but PyTorch and the model need about 1.5 GB of
-#   memory.
+#   dataset.
 # - "lexicon": VADER, a word list with rules for negation, capitals and
-#   "!!!". English only and a little less accurate, but it needs a few MB,
-#   so the service fits a small free hosting plan.
+#   "!!!". English only.
 #
 # Both return the same shape: {"label": positive|neutral|negative, "score"}.
 DEFAULT_MODEL_NAME = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
@@ -38,7 +36,7 @@ def emotion_backend() -> str:
 @lru_cache(maxsize=1)
 def load_model():
     # Imported here, not at the top, so the lexicon option never loads
-    # PyTorch at all - that import alone is most of the memory.
+    # PyTorch.
     from transformers import pipeline
 
     return pipeline("sentiment-analysis", model=_model_name())

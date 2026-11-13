@@ -1,6 +1,5 @@
-# Everything except PyTorch and transformers, for EMOTION_BACKEND=lexicon.
-# Used on hosting plans with little memory (Render's free plan has 512 MB);
-# see README "Run on Render". requirements.txt is still the full set.
+# Packages for EMOTION_BACKEND=lexicon (no PyTorch or transformers).
+# Used on Render; see README "Run on Render". requirements.txt is the full set.
 fastapi==0.141.1
 uvicorn[standard]==0.53.0
 scikit-learn==1.7.2

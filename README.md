@@ -127,7 +127,13 @@ Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health
 
 **Limits of the free plan.** A free service sleeps after 15 minutes without traffic, and the first request after that takes about a minute while it wakes. Pushes to the connected branch redeploy automatically.
 
-**The ai-service on the free plan.** Free instances have 512 MB, and the DistilBERT sentiment model needs PyTorch and about 1.5 GB. So on Render the ai-service installs `requirements-light.txt` (everything except PyTorch and transformers) and runs with `EMOTION_BACKEND=lexicon`: the sentiment comes from VADER, a word list with rules for negation, capitals and "!!!". It is English only and less accurate than DistilBERT, and the live site does not use DistilBERT at all. The category always comes from the trained scikit-learn model in `ai-service/models/`, and the suggested reply is a draft from Gemini that the admin edits and sends. Docker, Minikube and local runs keep the default `EMOTION_BACKEND=transformer` (DistilBERT, run inside the service).
+**What the ai-service uses on Render.** It installs `requirements-light.txt` and runs with `EMOTION_BACKEND=lexicon`:
+
+- **Category:** the trained scikit-learn model in `ai-service/models/`.
+- **Sentiment:** VADER, a word list with rules for negation, capitals and "!!!" (English).
+- **Suggested reply:** a draft from Gemini that the admin edits and sends.
+
+Docker, Minikube and local runs use `EMOTION_BACKEND=transformer` (DistilBERT, run inside the service) for the sentiment.
 
 The server waits up to `AI_SERVICE_TIMEOUT_MS` (30 s) for the ai-service. If a sleeping ai-service takes longer to wake, the complaint is still saved, with a default priority and no suggested reply; the next one is analysed normally. For any complaint saved without an analysis (including ones from before the ai-service was deployed), the admin opens it and selects **Run AI analysis**: the server calls the ai-service again, waiting up to 90 s so a sleeping ai-service can wake, (`POST /api/complaints/:id/analyze`, admin only) and fills in the category, sentiment, priority and suggested reply. A complaint that already has an analysis is never overwritten.
 
