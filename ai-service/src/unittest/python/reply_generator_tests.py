@@ -63,6 +63,9 @@ class ReplyGeneratorTests(unittest.TestCase):
         self.assertEqual(generate.call_args_list[0].kwargs["model"], "gemini-3.6-flash")
         self.assertEqual(generate.call_args_list[1].kwargs["model"], "gemini-3.5-flash-lite")
         mock_groq_client.assert_not_called()
+        for call in generate.call_args_list:
+            self.assertEqual(call.kwargs["config"].thinking_config.thinking_level, "MINIMAL")
+            self.assertIsNone(call.kwargs["config"].thinking_config.thinking_budget)
 
     @patch("app.reply_generator.find_similar_complaints", return_value=[])
     @patch("app.reply_generator._groq_client")

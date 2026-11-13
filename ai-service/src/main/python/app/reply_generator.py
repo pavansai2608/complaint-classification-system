@@ -120,8 +120,8 @@ def _ask_gemini(model: str, complaint_text: str, category: str, priority: str, s
             max_output_tokens=400,
             # Extended reasoning isn't needed for a short support reply,
             # and would otherwise eat most of the token budget before any
-            # visible text is written.
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            # visible text is written. "minimal" is accepted by both models.
+            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.MINIMAL),
             http_options=types.HttpOptions(timeout=10_000),
         ),
     )
