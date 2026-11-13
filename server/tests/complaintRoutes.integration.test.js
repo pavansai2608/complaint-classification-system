@@ -68,7 +68,7 @@ const validComplaint = {
 };
 
 describe('POST /api/complaints (integration)', () => {
-  it('creates and persists a complaint with the AI analysis attached', async () => {
+  it('saves the complaint at once and fills in the AI analysis in the background', async () => {
     const { token, user } = await createUser('customer');
 
     const res = await request(app)
@@ -77,12 +77,20 @@ describe('POST /api/complaints (integration)', () => {
       .send(validComplaint);
 
     expect(res.status).toBe(201);
-    expect(res.body.complaint.category).toBe('billing');
+    expect(res.body.complaint.analysisPending).toBe(true);
     expect(res.body.complaint.priority).toBe('Medium');
 
-    const saved = await Complaint.findOne({ customer: user.id });
-    expect(saved).not.toBeNull();
+    // The analysis is filled in in the background, just after the response.
+    let saved;
+    for (let i = 0; i < 50; i += 1) {
+      saved = await Complaint.findOne({ customer: user.id });
+      if (!saved.analysisPending) break;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
     expect(saved.title).toBe(validComplaint.title);
+    expect(saved.analysisPending).toBe(false);
+    expect(saved.category).toBe('billing');
+    expect(saved.suggestedReply).toBe('Thanks, we are looking into it.');
   });
 
   it('rejects a description that is too short and saves nothing', async () => {

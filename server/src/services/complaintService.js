@@ -25,16 +25,37 @@ async function runAnalysis(description, options) {
   }
 }
 
+// Saves the complaint straight away, marked as analysis pending, so the
+// customer never waits for the ai-service. The analysis runs in the
+// background and fills in the complaint when it arrives.
 async function createComplaint({ customerId, title, description, orderReference }) {
-  const analysis = await runAnalysis(description);
-
-  return Complaint.create({
+  const complaint = await Complaint.create({
     customer: customerId,
     title,
     description,
     orderReference: orderReference || null,
-    ...analysis,
+    priority: 'Medium',
+    analysisPending: true,
   });
+
+  // Not awaited on purpose: the response goes back now.
+  analyzeInBackground(complaint.id, description);
+  return complaint;
+}
+
+// Waits up to AI_SERVICE_TIMEOUT_MS (a sleeping ai-service takes a while to
+// wake, and Gemini can be slow). If the analysis never arrives the complaint
+// stays pending, and the admin can select Run AI analysis. Only updates a
+// complaint that is still pending, so it never overwrites a newer analysis
+// or a reply.
+async function analyzeInBackground(complaintId, description) {
+  const analysis = await runAnalysis(description);
+  if (analysis.analysisPending) return;
+  try {
+    await Complaint.updateOne({ _id: complaintId, analysisPending: true, agentReply: null }, { $set: analysis });
+  } catch (err) {
+    // The complaint stays pending; nothing else to do.
+  }
 }
 
 async function listComplaintsForCustomer(customerId) {
