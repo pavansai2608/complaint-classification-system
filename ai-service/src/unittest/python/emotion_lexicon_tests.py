@@ -61,6 +61,13 @@ class EmotionLexiconTests(unittest.TestCase):
         )
         self.assertEqual(predict_emotion(text)["label"], "negative")
 
+    def test_missing_parcel_reported_again_is_negative(self):
+        text = (
+            "The tracking page says my package was delivered, but there is nothing here. "
+            "I checked with building security too. This is the second time this has happened this month."
+        )
+        self.assertEqual(predict_emotion(text)["label"], "negative")
+
     def test_does_not_load_the_transformer_model(self):
         with mock.patch("app.emotion_model.load_model") as load_model:
             predict_emotion("The parcel was late.")
