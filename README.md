@@ -116,7 +116,7 @@ Note that the init script only runs when the data directory is empty. If you cha
    - `MONGODB_URI` - the Atlas string from step 1.
    - `CLIENT_ORIGIN` - the client address, e.g. `https://complaint-triage-web-jvl8.onrender.com`.
    - `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID` - the same OAuth Client ID. In Google Cloud Console, add the client address above to its **Authorized JavaScript origins**.
-   - `GEMINI_API_KEY` (ai-service) - from https://aistudio.google.com/apikey, for suggested replies. The reply comes from `gemini-3.6-flash`, or from `gemini-3.5-flash-lite` when that model is busy, both with `thinking_level` set to minimal so a short reply comes back fast. `GROQ_API_KEY` is an optional extra provider; leave it empty if you have none. If none of them answers, the admin gets a fixed template reply, and the ai-service log shows a line such as `gemini reply failed: TimeoutError: ...` with the reason.
+   - `GEMINI_API_KEY` (ai-service) - from https://aistudio.google.com/apikey, for suggested replies. The reply comes from `gemini-3.5-flash-lite`, or from `gemini-3.6-flash` when that model is busy, both with `thinking_level` set to minimal so a short reply comes back fast. `GROQ_API_KEY` is an optional extra provider; leave it empty if you have none. If none of them answers, the admin gets a fixed template reply, and the ai-service log shows a line such as `gemini reply failed: TimeoutError: ...` with the reason.
    - `AI_SERVICE_URL` (server) - leave empty on the first deploy; after it, set it to the ai-service's address (see step 3).
 
    `AI_SERVICE_KEY` needs no typing: Render generates it on the ai-service and the server reads the same value. The ai-service also reads `MONGODB_URI` from the server.
