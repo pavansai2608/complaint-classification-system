@@ -130,7 +130,7 @@ Check it with `curl https://complaint-triage-server-jvl8.onrender.com/api/health
 **What the ai-service uses on Render.** It installs `requirements-light.txt` and runs with `EMOTION_BACKEND=lexicon`:
 
 - **Category:** the trained scikit-learn model in `ai-service/models/`.
-- **Sentiment:** VADER, a word list with rules for negation, capitals and "!!!" (English), plus complaint wording in `emotion_model.py`: polite words such as "please" and "thank you" score 0, words such as "refund" and "overcharged" score negative, and problem phrases such as "never arrived" or "will not load" make the result negative.
+- **Sentiment:** VADER, a word list with rules for negation, capitals and "!!!" (English), plus complaint wording in `emotion_model.py`: polite words such as "please" and "thank you" score 0, words such as "refund" and "overcharged" score negative, and problem phrases such as "never arrived", "will not load" or "blank screen" make the result negative.
 - **Suggested reply:** a draft from Gemini that the admin edits and sends.
 
 Docker, Minikube and local runs use `EMOTION_BACKEND=transformer` (DistilBERT, run inside the service) for the sentiment.

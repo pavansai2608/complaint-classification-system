@@ -25,10 +25,12 @@ LEXICON_NEGATIVE_FROM = -0.05
 
 # Complaint wording for the VADER word list.
 # Polite words carry no feeling inside a complaint ("please refund me",
-# "I would like help"), so they score 0.
+# "I would like help"), and neither do steps the customer already tried
+# ("cleared the cache"), so they score 0.
 COMPLAINT_NEUTRAL_WORDS = (
     "please", "thank", "thanks", "kindly", "support", "help", "want", "hope",
     "appreciate", "like", "sure", "ok", "okay", "resolve", "resolved",
+    "cleared",
 )
 # Complaint words, scored on VADER's -4 to 4 scale.
 COMPLAINT_NEGATIVE_WORDS = {
@@ -46,6 +48,8 @@ PROBLEM_PHRASES = (
     "will not load", "won't load", "does not load", "doesn't load",
     "not working", "stopped working", "does not work", "doesn't work",
     "charged twice", "no response", "nobody has replied", "no one has replied",
+    "spins forever", "keeps spinning", "keeps loading", "keeps crashing", "blank screen",
+    "blank page", "error message", "cannot log in", "can't log in",
 )
 PROBLEM_PHRASE_PENALTY = 0.4
 
