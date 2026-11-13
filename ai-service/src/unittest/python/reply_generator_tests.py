@@ -54,6 +54,19 @@ class ReplyGeneratorTests(unittest.TestCase):
     @patch("app.reply_generator.find_similar_complaints", return_value=[])
     @patch("app.reply_generator._groq_client")
     @patch("app.reply_generator._client")
+    def test_busy_main_model_uses_the_backup_gemini_model(self, mock_gemini_client, mock_groq_client, mock_similar):
+        backup_answer = MagicMock(text="Sorry about the damaged order, we are looking into it.")
+        generate = mock_gemini_client.return_value.models.generate_content
+        generate.side_effect = [RuntimeError("503 UNAVAILABLE"), backup_answer]
+        result = generate_suggested_reply("Order arrived damaged", "product", "Medium")
+        self.assertEqual(result, {"reply": "Sorry about the damaged order, we are looking into it.", "source": "gemini"})
+        self.assertEqual(generate.call_args_list[0].kwargs["model"], "gemini-3.6-flash")
+        self.assertEqual(generate.call_args_list[1].kwargs["model"], "gemini-3.5-flash-lite")
+        mock_groq_client.assert_not_called()
+
+    @patch("app.reply_generator.find_similar_complaints", return_value=[])
+    @patch("app.reply_generator._groq_client")
+    @patch("app.reply_generator._client")
     def test_provider_failure_is_logged_with_the_reason(self, mock_gemini_client, mock_groq_client, mock_similar):
         mock_gemini_client.return_value.models.generate_content.side_effect = TimeoutError("timed out")
         mock_groq_client.return_value.chat.completions.create.side_effect = TimeoutError("timed out")
