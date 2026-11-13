@@ -10,6 +10,8 @@ from app.grounding import find_similar_complaints
 logger = logging.getLogger("uvicorn.error")
 
 DEFAULT_MODEL_NAME = "gemini-3.6-flash"
+# Asked when the main model is busy or slow.
+DEFAULT_BACKUP_MODEL_NAME = "gemini-3.5-flash-lite"
 DEFAULT_GROQ_MODEL_NAME = "openai/gpt-oss-120b"
 MAX_COMPLAINT_CHARS = 2000
 
@@ -57,7 +59,11 @@ def _client() -> genai.Client:
 
 
 def _model_name() -> str:
-    return os.getenv("GEMINI_MODEL", DEFAULT_MODEL_NAME)
+    return os.getenv("GEMINI_MODEL") or DEFAULT_MODEL_NAME
+
+
+def _backup_model_name() -> str:
+    return os.getenv("GEMINI_BACKUP_MODEL") or DEFAULT_BACKUP_MODEL_NAME
 
 
 def _groq_client() -> Groq:
@@ -92,13 +98,21 @@ MAX_ATTEMPTS = 2
 
 
 def _call_gemini(complaint_text: str, category: str, priority: str, similar: list) -> str:
+    return _ask_gemini(_model_name(), complaint_text, category, priority, similar)
+
+
+def _call_gemini_backup(complaint_text: str, category: str, priority: str, similar: list) -> str:
+    return _ask_gemini(_backup_model_name(), complaint_text, category, priority, similar)
+
+
+def _ask_gemini(model: str, complaint_text: str, category: str, priority: str, similar: list) -> str:
     # Bound to a name on purpose: the SDK's underlying HTTP client can get
     # garbage-collected (and closed) mid-request if the Client object it
     # belongs to is never referenced by anything other than this chained
     # expression - a real, reproduced failure, not a hypothetical one.
     client = _client()
     response = client.models.generate_content(
-        model=_model_name(),
+        model=model,
         contents=_build_user_content(complaint_text, category, priority, similar),
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
@@ -133,11 +147,13 @@ def _call_groq(complaint_text: str, category: str, priority: str, similar: list)
     return (response.choices[0].message.content or "").strip()
 
 
-def _generate_with(call, source: str, complaint_text: str, category: str, priority: str, similar: list) -> dict | None:
+def _generate_with(
+    call, source: str, complaint_text: str, category: str, priority: str, similar: list, attempts: int = MAX_ATTEMPTS
+) -> dict | None:
     """Runs one provider's call, retrying on error. Returns None if it
     never produced a usable reply, so the caller can try the next provider.
     """
-    for attempt in range(MAX_ATTEMPTS):
+    for attempt in range(attempts):
         try:
             reply = call(complaint_text, category, priority, similar)
             if _looks_unsafe(reply):
@@ -146,7 +162,7 @@ def _generate_with(call, source: str, complaint_text: str, category: str, priori
         except Exception as error:
             # Only the error type and a short message, never the request.
             logger.warning("%s reply failed: %s: %s", source, type(error).__name__, str(error)[:200])
-            if attempt == MAX_ATTEMPTS - 1:
+            if attempt == attempts - 1:
                 return None
     return None
 
@@ -154,20 +170,23 @@ def _generate_with(call, source: str, complaint_text: str, category: str, priori
 def generate_suggested_reply(complaint_text: str, category: str, priority: str) -> dict:
     """Returns {"reply": str, "source": "gemini" | "groq" | "fallback"}.
 
-    Tries Gemini first, then Groq if Gemini keeps failing, timing out, or
-    producing output that looks like a successful injection attempt - an
-    agent always gets a usable reply either way. Falls back to a fixed
-    template only if both providers fail. Each provider retries once first,
-    since a free-tier API call occasionally fails transiently (a brief
-    timeout or a "model overloaded" response) even when the service is
-    healthy.
+    Tries the main Gemini model, then the backup Gemini model, then Groq,
+    if a call fails, times out, or produces output that looks like a
+    successful injection attempt. Falls back to a fixed template only if
+    all of them fail, so the admin always gets a usable reply.
     """
     fallback = FALLBACK_TEMPLATE.format(category=category)
     similar = find_similar_complaints(complaint_text)
 
-    result = _generate_with(_call_gemini, "gemini", complaint_text, category, priority, similar)
+    # One try on each Gemini model keeps the worst case near 20 seconds,
+    # inside the server's wait for a new complaint.
+    result = _generate_with(_call_gemini, "gemini", complaint_text, category, priority, similar, attempts=1)
     if result:
         return result
+
+    result = _generate_with(_call_gemini_backup, "gemini-backup", complaint_text, category, priority, similar, attempts=1)
+    if result:
+        return {"reply": result["reply"], "source": "gemini"}
 
     result = _generate_with(_call_groq, "groq", complaint_text, category, priority, similar)
     if result:
