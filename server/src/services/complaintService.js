@@ -2,12 +2,15 @@ const Complaint = require('../models/Complaint');
 const { analyzeComplaint } = require('./aiService');
 const { ApiError } = require('../utils/ApiError');
 
+// How long an admin's "Run AI analysis" waits for the ai-service.
+const REANALYZE_TIMEOUT_MS = 90000;
+
 // Never lets an AI service outage lose a complaint: on any failure (down,
 // slow, misconfigured) the complaint is still saved, just with a safe
 // default priority and a flag so it can be retried later.
-async function runAnalysis(description) {
+async function runAnalysis(description, options) {
   try {
-    const result = await analyzeComplaint(description);
+    const result = await analyzeComplaint(description, options);
     return {
       category: result.category,
       confidence: result.confidence,
@@ -60,7 +63,9 @@ async function reanalyzeComplaint(complaintId) {
     throw new ApiError(409, 'ALREADY_ANALYZED', 'This complaint already has an AI analysis.');
   }
 
-  const analysis = await runAnalysis(complaint.description);
+  // The admin is waiting on purpose, so give a sleeping ai-service time to
+  // wake and Gemini time to write the draft.
+  const analysis = await runAnalysis(complaint.description, { timeoutMs: REANALYZE_TIMEOUT_MS });
   if (analysis.analysisPending) {
     throw new ApiError(503, 'AI_UNAVAILABLE', 'The AI service did not answer. Please try again in a minute.');
   }
