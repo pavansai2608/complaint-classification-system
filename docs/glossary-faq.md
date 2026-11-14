@@ -20,7 +20,7 @@ Plain explanations of the words used in the Complaint Resolution System, and ans
 | **Suggested reply** | A draft answer written by the system for the admin to read and change. It is never sent to a customer without the admin. |
 | **Needs review** | A flag set when the system is not sure about the category. The admin should check it. |
 | **AI analysis** | The automatic step that gives a new complaint its category, sentiment, priority and suggested reply. |
-| **Analysis pending** | The analysis could not run when the complaint was sent, for example because the service was down. The complaint is still saved with a default priority of Medium. |
+| **Analysis pending** | The analysis has not arrived yet. Every new complaint is saved straight away with priority Medium and this mark, and the analysis normally fills in within a minute. If the analysis service cannot answer, the complaint stays pending until the admin selects **Run AI analysis**. |
 | **Correction** | When the admin changes the category or priority that the system chose. The original values are kept. |
 
 ## FAQ
@@ -57,17 +57,20 @@ The system checks these rules in order and uses the first one that matches:
 
 The admin can change the priority before replying.
 
+**How is the sentiment found?**
+On the live site, a word list (VADER) scores the words of the description, with extra rules for complaints: polite words such as "please" and "thank you" do not count as positive, and phrases such as "never arrived" or "blank screen" count as negative. When the service runs on a developer's machine, in Docker or in Minikube, a pretrained language model (DistilBERT) reads the tone instead.
+
 **How is the category chosen?**
 A small model trained on example complaints reads the description and picks billing, delivery or product. If it is less than 60% sure, the complaint is marked "needs review".
 
 **Who writes the suggested reply?**
-A language model (Google Gemini) writes a short, polite draft. The admin reads it, edits it if needed, and sends it. If the model is unavailable, a fixed template is used instead.
+A language model (Google Gemini: `gemini-3.5-flash-lite`, or `gemini-3.6-flash` when that one is busy) writes a short, polite draft. The admin reads it, edits it if needed, and sends it. If neither model answers, a fixed template is used instead, and the admin can select **Run AI analysis again** later for a new draft.
 
 **What if the automatic analysis is wrong?**
 The admin can correct the category and priority. The complaint is marked as corrected, and the original values are kept.
 
 **What if the analysis service is down when I submit?**
-Your complaint is still saved. It gets the default priority Medium and is marked "analysis pending".
+Your complaint is still saved straight away, like every complaint. It keeps the priority Medium and the mark "analysis pending" until the analysis runs; the admin can start it from the complaint page.
 
 ### Your data
 

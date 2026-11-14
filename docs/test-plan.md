@@ -8,7 +8,7 @@ How we test the complaint system: what is covered, with which tools, where it ru
 
 | Area | What it is |
 |---|---|
-| `client/` | React app: register, login, complaint forms, complaint list, agent queue, admin dashboard |
+| `client/` | React app: register, login, complaint forms, complaint list, admin priority queue, admin dashboard |
 | `server/` | Express API: auth, roles, complaints, the call to the analysis service |
 | `ai-service/` | Python service: category, emotion, priority, suggested reply, `/analyze` |
 | Whole system | The three services together in a real browser, and their security |
@@ -20,7 +20,7 @@ How we test the complaint system: what is covered, with which tools, where it ru
 | Level | What it checks | Tool | Where |
 |---|---|---|---|
 | Unit and component (client) | One component or helper, with the API mocked | Vitest + Testing Library + jsdom | `client/src/**/*.test.jsx` |
-| Unit and API (server) | Services, middleware, validators and each route, with the database mocked | Jest + Supertest | `server/tests/` |
+| Unit and API (server) | Services, middleware, validators and each route, with the database mocked; integration tests run the routes against an in-memory MongoDB | Jest + Supertest + mongodb-memory-server | `server/tests/` |
 | Unit and API (ai-service) | Model loading, prediction, rules, and the FastAPI routes | `unittest` + FastAPI `TestClient`, run by PyBuilder (`pyb`) | `ai-service/src/unittest/python/*_tests.py` |
 | End-to-end | A real user journey in a real browser against the running app | Selenium + `unittest`, headless Chrome | `e2e-tests/` |
 | Security scans | Known weaknesses in code, packages, images and the running app | OWASP ZAP, `npm audit`, `pip-audit`, Trivy, Dependabot | CI pipeline and GitHub |
@@ -94,22 +94,14 @@ These are goals, not yet measured. Coverage tools still need to be switched on (
 
 ## 9. Current state and gaps
 
-Today: 10 server test files, 9 client test files, 3 ai-service test files and 1 end-to-end file (2 tests).
+Today: 18 server test files (192 tests), 23 client test files (99 tests), 9 ai-service test files (63 tests) and 2 end-to-end files (4 tests). Jenkins runs them on every push, then builds the images and runs `npm audit`, `pip-audit` and Trivy.
 
 | Gap | Why it matters | Card |
 |---|---|---|
-| Server tests use a fake database | Problems such as duplicate emails are not tested against a real MongoDB | needs a decision, see below |
-| End-to-end covers only complaint submission | Login errors, my complaints, agent queue and role protection are not covered | CCS-35, later cards |
+| End-to-end covers only the home page and complaint submission | Login errors, my complaints, the admin queue and role protection are not covered | CCS-35, later cards |
 | No coverage numbers yet | Targets cannot be checked | new card needed |
 | Login with a non-text password returns 500 for an existing email | Needs a test, and a fix | Bug not created yet, see [OWASP checklist](owasp-checklist.md) |
-| No tests for rate limits on register and refresh | Limits do not exist yet | CCS-48 |
-| `/analyze` not tested | Endpoint is not built yet | CCS-56, CCS-65 |
-| Prompt injection guard not tested | Guard not built yet | CCS-55, CCS-66 |
 | LLM evaluation harness not verified | Scores must be checked to be real | CCS-67 |
-| No pipeline yet | Tests only run by hand | CCS-50, CCS-61 |
-| Security scans run by hand only | Reports are in [docs/security](security/README.md), but nothing runs them automatically and Docker images are not scanned yet | CCS-50, CCS-61, CCS-49 |
-
-**Decision needed from the team:** to test the server against a real database we would add a new tool, for example an in-memory MongoDB or a Docker container. Agree on this before adding it.
 
 ## 10. Who does what
 
