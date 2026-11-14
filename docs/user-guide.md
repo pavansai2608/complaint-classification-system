@@ -54,7 +54,7 @@ Good to know:
 
    ![Submit a complaint](images/06-new-complaint.png)
 
-3. Select **Submit complaint**. You return to your home page and see "Complaint submitted".
+3. Select **Submit complaint**. You return to your home page and see "Complaint submitted". The automatic analysis (category, tone and priority) appears on the complaint within about a minute; until then it says the complaint is still being analysed.
 
    ![Complaint submitted](images/07-complaint-submitted.png)
 
@@ -125,7 +125,7 @@ The complaint is marked Resolved and you return to the queue, which shows "Reply
 
 Good to know:
 
-- If the analysis service was down when the complaint arrived, the page says "AI analysis is still pending". Read the complaint and write the reply yourself.
+- If a complaint has no analysis yet, select **Run AI analysis** (see above), or read the complaint and write the reply yourself.
 - The reply must be 1 to 2000 characters.
 - A complaint that is already Resolved cannot be replied to again.
 - Do not promise a refund or an outcome you cannot guarantee.

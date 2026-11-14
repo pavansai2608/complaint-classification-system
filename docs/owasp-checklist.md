@@ -4,7 +4,7 @@ How each risk in the [OWASP Top 10:2025](https://owasp.org/Top10/2025/) applies 
 
 Status: **Done** = in the code today. **Partly** = some protection exists, more is planned. **Planned** = not built yet. **Gap** = a weakness found, with no card yet.
 
-The four parts of the app: **auth** (register, login, tokens), **complaints API** (Express + MongoDB), **AI service** (Python service that analyses a complaint), **dashboards** (agent queue and admin charts).
+The four parts of the app: **auth** (register, login, tokens), **complaints API** (Express + MongoDB), **AI service** (Python service that analyses a complaint), **dashboards** (admin priority queue and charts).
 
 | # | Risk | Status |
 |---|---|---|
@@ -23,7 +23,7 @@ The four parts of the app: **auth** (register, login, tokens), **complaints API*
 
 - **How it applies:** a customer must never read another customer's complaint. An agent or admin page must not open for a customer. The AI service must only be called by our server.
 - **Protection now:** every protected route checks the login token, then the role (`requireRole`). A complaint is fetched by id and owner together, so someone else's complaint looks like it does not exist. The user is re-read from the database on each request, so a disabled account stops working at once.
-- **Still to do:** the same checks on the agent queue and status update. Keep the AI service reachable only from the server, not from the internet.
+- **Still to do:** the same checks on the admin queue and status update. Keep the AI service reachable only from the server, not from the internet.
 - **Cards:** CCS-46, CCS-47 (agent routes), CCS-51 (route tests), CCS-56 (AI service endpoint).
 
 ## A02: Security Misconfiguration
@@ -57,7 +57,7 @@ The four parts of the app: **auth** (register, login, tokens), **complaints API*
 ## A06: Insecure Design
 
 - **How it applies:** missing protections that no code fix can add later.
-- **Protection now:** the threat list names the main attacks and their protections. Accounts lock after 5 wrong passwords. A suggested reply is only a suggestion, and an agent edits it before sending.
+- **Protection now:** the threat list names the main attacks and their protections. Accounts lock after 5 wrong passwords. A suggested reply is only a suggestion, and the admin edits it before sending.
 - **Still to do:** keep the threat list up to date as features are added.
 - **Cards:** CCS-19 (threat list, done), CCS-55.
 
