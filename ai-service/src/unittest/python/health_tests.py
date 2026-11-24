@@ -26,6 +26,16 @@ class HealthTests(unittest.TestCase):
         response = client.get("/health", headers={"Origin": "http://evil.example.com"})
         self.assertNotIn("access-control-allow-origin", response.headers)
 
+    def test_spec_lists_both_routes_and_the_service_key(self):
+        spec = app.openapi()
+        self.assertEqual(set(spec["paths"]), {"/health", "/analyze"})
+        self.assertEqual(
+            spec["components"]["securitySchemes"]["ServiceKey"],
+            {"type": "apiKey", "in": "header", "name": "X-Service-Key"},
+        )
+        self.assertEqual(spec["paths"]["/analyze"]["post"]["security"], [{"ServiceKey": []}])
+        self.assertNotIn("security", spec["paths"]["/health"]["get"])
+
 
 if __name__ == "__main__":
     unittest.main()

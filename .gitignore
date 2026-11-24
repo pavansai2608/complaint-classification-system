@@ -18,6 +18,12 @@ target/
 # Real Kubernetes secret values (keep secret.example.yaml)
 k8s/secret.yaml
 
+# Local HTTPS certificate and key
+certs/
+
+# Postman environment with real values (keep postman/complaint-triage.postman_environment.json)
+postman/*.local.json
+
 # OS
 .DS_Store
 
