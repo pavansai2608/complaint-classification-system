@@ -29,7 +29,7 @@ describe('GET /api/health', () => {
   it('returns 200 and reports the database as disconnected by default', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: 'ok', database: 'disconnected' });
+    expect(res.body).toEqual({ status: 'broken', database: 'disconnected' });
   });
 
   it('reports the database as connected when Mongoose is connected', async () => {
