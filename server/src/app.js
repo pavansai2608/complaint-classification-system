@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const swaggerUi = require('swagger-ui-express');
 const { isConnected } = require('./config/db');
 const { ApiError } = require('./utils/ApiError');
 const { authenticate } = require('./middleware/authenticate');
@@ -13,6 +14,7 @@ const userRoutes = require('./routes/userRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
+const { openapi } = require('./docs/openapi');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -46,6 +48,12 @@ function createApp({ clientOrigin }) {
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', database: isConnected() ? 'connected' : 'disconnected' });
   });
+
+  // Swagger UI is off unless ENABLE_DOCS=true, so the full API map is not
+  // public by default.
+  if (process.env.ENABLE_DOCS === 'true') {
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapi));
+  }
 
   app.use('/api/auth', authRoutes);
   app.use('/api/users', authenticate, userRoutes);

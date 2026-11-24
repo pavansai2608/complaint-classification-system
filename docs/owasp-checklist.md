@@ -29,7 +29,7 @@ The four parts of the app: **auth** (register, login, tokens), **complaints API*
 ## A02: Security Misconfiguration
 
 - **How it applies:** wrong headers, open CORS, debug pages left on, weak defaults.
-- **Protection now:** Helmet sets secure headers, CORS allows only the app's own address, JSON bodies are limited to 10 KB, and errors never show stack traces. The AI service turns its `/docs` pages off unless `ENABLE_DOCS=true`. Every service has a `.env.example` and real `.env` files are ignored by git.
+- **Protection now:** Helmet sets secure headers, CORS allows only the app's own address, JSON bodies are limited to 10 KB, and errors never show stack traces. The server's `/api/docs` and the AI service's `/docs` pages are off unless `ENABLE_DOCS=true`. Every service has a `.env.example` and real `.env` files are ignored by git.
 - **Still to do:** review headers and limits on all routes, and set secure settings in Docker and Kubernetes.
 - **Cards:** CCS-48, CCS-36 (headers checklist), CCS-49 (Docker), CCS-60 (Kubernetes), CCS-62 (OWASP ZAP scan).
 
