@@ -39,6 +39,38 @@ spec:
             limits:
               cpu: 200m
               memory: 64Mi
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /var/log/nginx
+        # Sidecar: a second container in the same pod. It shares the log
+        # folder with nginx and prints the logs, so web traffic can be read
+        # with: kubectl logs deployment/client -c log-reader
+        # It can only read the logs, and runs without root.
+        - name: log-reader
+          image: busybox:1.37
+          command: ["tail", "-n", "+1", "-F", "/var/log/nginx/access.log", "/var/log/nginx/error.log"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: nginx-logs
+              mountPath: /var/log/nginx
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: nginx-logs
+          emptyDir:
+            sizeLimit: 50Mi
 ---
 apiVersion: v1
 kind: Service
