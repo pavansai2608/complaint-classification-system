@@ -47,8 +47,8 @@ const counts = (key) => ({
 const paths = {
   '/api/health': {
     get: {
-      tags: ['Health'],
-      summary: 'Server and database status',
+      tags: ['0. Public'],
+      summary: '1. GET - server and database status',
       description: 'Public.',
       security: open,
       responses: {
@@ -62,8 +62,8 @@ const paths = {
 
   '/api/auth/register': {
     post: {
-      tags: ['Auth'],
-      summary: 'Create a customer account',
+      tags: ['1. Auth'],
+      summary: '1. POST - create a customer account',
       description: 'Public. Protected by a per-IP rate limit and input validation.',
       security: open,
       requestBody: body('RegisterRequest'),
@@ -72,8 +72,8 @@ const paths = {
   },
   '/api/auth/login': {
     post: {
-      tags: ['Auth'],
-      summary: 'Log in and get a Bearer token',
+      tags: ['1. Auth'],
+      summary: '2. POST - log in and get a Bearer token',
       description:
         'Public. Protected by a per-IP rate limit and account lockout. The page saves accessToken into Authorize. Also sets the refresh cookie.',
       security: open,
@@ -83,8 +83,8 @@ const paths = {
   },
   '/api/auth/google': {
     post: {
-      tags: ['Auth'],
-      summary: 'Log in with Google',
+      tags: ['1. Auth'],
+      summary: '3. POST - log in with Google',
       description: 'Public. The server verifies the Google ID token.',
       security: open,
       requestBody: body('GoogleRequest'),
@@ -93,8 +93,8 @@ const paths = {
   },
   '/api/auth/refresh': {
     post: {
-      tags: ['Auth'],
-      summary: 'Get a new access token',
+      tags: ['1. Auth'],
+      summary: '4. POST - get a new access token',
       description: 'Uses the httpOnly refresh cookie set at login. The browser sends it automatically.',
       security: cookie,
       responses: { 200: ok('New tokens', session), ...errors(401, 429) },
@@ -102,8 +102,8 @@ const paths = {
   },
   '/api/auth/logout': {
     post: {
-      tags: ['Auth'],
-      summary: 'Log out',
+      tags: ['1. Auth'],
+      summary: '5. POST - log out',
       description: 'Public. Clears the refresh cookie.',
       security: open,
       responses: { 204: { description: 'Logged out' }, ...errors(429) },
@@ -112,8 +112,8 @@ const paths = {
 
   '/api/users/me': {
     get: {
-      tags: ['Users'],
-      summary: 'The logged-in user',
+      tags: ['2. Users'],
+      summary: '1. GET - the logged-in user',
       description: 'Bearer token. Any role.',
       security: bearer,
       responses: { 200: ok('User', wrap('user', ref('User'))), ...errors(401, 429) },
@@ -122,8 +122,8 @@ const paths = {
 
   '/api/complaints': {
     post: {
-      tags: ['Complaints'],
-      summary: 'Submit a complaint',
+      tags: ['3. Complaints - customer'],
+      summary: '1. POST - submit a complaint',
       description: 'Bearer token. Role: customer.',
       security: bearer,
       requestBody: body('CreateComplaintRequest'),
@@ -132,8 +132,8 @@ const paths = {
   },
   '/api/complaints/mine': {
     get: {
-      tags: ['Complaints'],
-      summary: 'List my complaints',
+      tags: ['3. Complaints - customer'],
+      summary: '2. GET - list my complaints',
       description: 'Bearer token. Role: customer.',
       security: bearer,
       responses: {
@@ -144,18 +144,28 @@ const paths = {
   },
   '/api/complaints/{id}': {
     get: {
-      tags: ['Complaints'],
-      summary: 'Read one complaint',
+      tags: ['3. Complaints - customer'],
+      summary: '3. GET - read one complaint',
       description: 'Bearer token. Role: customer (own complaints only) or admin.',
       security: bearer,
       parameters: [complaintId],
       responses: { 200: ok('Complaint', oneComplaint), ...errors(400, 401, 403, 404, 429) },
     },
   },
+  '/api/complaints/{id}/analyze': {
+    post: {
+      tags: ['5. Complaints - admin'],
+      summary: '1. POST - run the AI analysis',
+      description: 'Bearer token. Role: admin. No body.',
+      security: bearer,
+      parameters: [complaintId],
+      responses: { 200: ok('Complaint', oneComplaint), ...errors(400, 401, 403, 404, 409, 429, 503) },
+    },
+  },
   '/api/complaints/{id}/status': {
     patch: {
-      tags: ['Complaints'],
-      summary: 'Change the status',
+      tags: ['5. Complaints - admin'],
+      summary: '2. PATCH - change the status',
       description: 'Bearer token. Role: admin.',
       security: bearer,
       parameters: [complaintId],
@@ -165,8 +175,8 @@ const paths = {
   },
   '/api/complaints/{id}/reply': {
     post: {
-      tags: ['Complaints'],
-      summary: 'Send a reply',
+      tags: ['5. Complaints - admin'],
+      summary: '3. POST - send a reply',
       description: 'Bearer token. Role: admin.',
       security: bearer,
       parameters: [complaintId],
@@ -174,21 +184,11 @@ const paths = {
       responses: { 200: ok('Complaint', oneComplaint), ...errors(400, 401, 403, 404, 429) },
     },
   },
-  '/api/complaints/{id}/analyze': {
-    post: {
-      tags: ['Complaints'],
-      summary: 'Run the AI analysis',
-      description: 'Bearer token. Role: admin. No body.',
-      security: bearer,
-      parameters: [complaintId],
-      responses: { 200: ok('Complaint', oneComplaint), ...errors(400, 401, 403, 404, 409, 429, 503) },
-    },
-  },
 
   '/api/admin/queue': {
     get: {
-      tags: ['Admin'],
-      summary: 'Complaint queue, most urgent first',
+      tags: ['4. Admin dashboard'],
+      summary: '1. GET - complaint queue, most urgent first',
       description: 'Bearer token. Role: admin.',
       security: bearer,
       parameters: [
@@ -213,8 +213,8 @@ const paths = {
   },
   '/api/admin/summary': {
     get: {
-      tags: ['Admin'],
-      summary: 'Complaint counts by status',
+      tags: ['4. Admin dashboard'],
+      summary: '2. GET - complaint counts by status',
       description: 'Bearer token. Role: admin.',
       security: bearer,
       responses: {
@@ -233,8 +233,8 @@ const paths = {
   },
   '/api/admin/analytics': {
     get: {
-      tags: ['Admin'],
-      summary: 'Numbers for the admin charts',
+      tags: ['4. Admin dashboard'],
+      summary: '3. GET - numbers for the admin charts',
       description: 'Bearer token. Role: admin.',
       security: bearer,
       responses: {
@@ -336,6 +336,17 @@ const schemas = {
   ),
 };
 
+// The groups, in the order Swagger UI shows them. Inside a group the routes
+// are shown in the order of paths above.
+const tags = [
+  { name: '0. Public', description: 'No login' },
+  { name: '1. Auth', description: 'Accounts and tokens' },
+  { name: '2. Users', description: 'Bearer token, any role' },
+  { name: '3. Complaints - customer', description: 'Bearer token of a customer' },
+  { name: '4. Admin dashboard', description: 'Bearer token of an admin' },
+  { name: '5. Complaints - admin', description: 'Bearer token of an admin' },
+];
+
 const openapi = {
   openapi: '3.0.3',
   info: {
@@ -344,6 +355,7 @@ const openapi = {
     description: 'Log in with POST /api/auth/login. The page saves the accessToken into Authorize.',
   },
   servers: [{ url: '/' }],
+  tags,
   components: {
     securitySchemes: {
       bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

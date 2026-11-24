@@ -1,15 +1,15 @@
 {
   "info": {
     "name": "Complaint Triage API",
-    "description": "All 16 server routes and both AI service routes. Choose the Complaint Triage environment, fill in the admin login and the AI service key, then run the folders from top to bottom. The login requests save their token, and the next requests send it.",
+    "description": "All 16 server routes and both AI service routes, in the order they are used. Choose the Complaint Triage environment, fill in the admin login and the AI service key, then run the folders from top to bottom. The login requests save their token, and the next requests send it.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Health",
+      "name": "0. Public",
       "item": [
         {
-          "name": "Server health",
+          "name": "1. GET - server and database status",
           "event": [
             {
               "listen": "test",
@@ -38,14 +38,9 @@
               ]
             }
           }
-        }
-      ]
-    },
-    {
-      "name": "AI service",
-      "item": [
+        },
         {
-          "name": "AI service health",
+          "name": "2. GET - AI service status",
           "event": [
             {
               "listen": "test",
@@ -75,7 +70,7 @@
           }
         },
         {
-          "name": "Analyze text",
+          "name": "Setup - warm up the AI service",
           "event": [
             {
               "listen": "test",
@@ -134,10 +129,10 @@
       ]
     },
     {
-      "name": "Auth",
+      "name": "1. Auth",
       "item": [
         {
-          "name": "Register",
+          "name": "1. POST - create a customer account",
           "event": [
             {
               "listen": "prerequest",
@@ -190,7 +185,7 @@
           }
         },
         {
-          "name": "Login (customer)",
+          "name": "2. POST - log in (customer)",
           "event": [
             {
               "listen": "test",
@@ -232,41 +227,7 @@
           }
         },
         {
-          "name": "Refresh",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "if (pm.response.code === 200) pm.environment.set('customerToken', pm.response.json().accessToken);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "auth": {
-              "type": "noauth"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/refresh",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
-            },
-            "description": "Uses the httpOnly refresh cookie from the customer login, which Postman keeps and sends."
-          }
-        },
-        {
-          "name": "Google login",
+          "name": "3. POST - log in with Google",
           "event": [
             {
               "listen": "test",
@@ -308,14 +269,48 @@
               }
             }
           }
+        },
+        {
+          "name": "4. POST - get a new access token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) pm.environment.set('customerToken', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Uses the httpOnly refresh cookie from the customer login, which Postman keeps and sends."
+          }
         }
       ]
     },
     {
-      "name": "Users",
+      "name": "2. Users",
       "item": [
         {
-          "name": "Me",
+          "name": "1. GET - the logged-in user",
           "event": [
             {
               "listen": "test",
@@ -356,10 +351,10 @@
       ]
     },
     {
-      "name": "Complaints (customer)",
+      "name": "3. Complaints - customer",
       "item": [
         {
-          "name": "Submit complaint",
+          "name": "1. POST - submit a complaint",
           "event": [
             {
               "listen": "test",
@@ -407,7 +402,7 @@
           }
         },
         {
-          "name": "My complaints",
+          "name": "2. GET - list my complaints",
           "event": [
             {
               "listen": "test",
@@ -446,7 +441,7 @@
           }
         },
         {
-          "name": "Read one complaint",
+          "name": "3. GET - read one complaint",
           "event": [
             {
               "listen": "test",
@@ -487,10 +482,10 @@
       ]
     },
     {
-      "name": "Admin",
+      "name": "4. Admin dashboard",
       "item": [
         {
-          "name": "Login (admin)",
+          "name": "Setup - log in (admin)",
           "event": [
             {
               "listen": "test",
@@ -533,7 +528,7 @@
           }
         },
         {
-          "name": "Queue",
+          "name": "1. GET - complaint queue, most urgent first",
           "event": [
             {
               "listen": "test",
@@ -586,7 +581,7 @@
           }
         },
         {
-          "name": "Summary",
+          "name": "2. GET - complaint counts by status",
           "event": [
             {
               "listen": "test",
@@ -625,7 +620,7 @@
           }
         },
         {
-          "name": "Analytics",
+          "name": "3. GET - numbers for the admin charts",
           "event": [
             {
               "listen": "test",
@@ -662,9 +657,14 @@
               ]
             }
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "5. Complaints - admin",
+      "item": [
         {
-          "name": "Run AI analysis",
+          "name": "1. POST - run the AI analysis",
           "event": [
             {
               "listen": "test",
@@ -704,7 +704,7 @@
           }
         },
         {
-          "name": "Change status",
+          "name": "2. PATCH - change the status",
           "event": [
             {
               "listen": "test",
@@ -753,7 +753,7 @@
           }
         },
         {
-          "name": "Send reply",
+          "name": "3. POST - send a reply",
           "event": [
             {
               "listen": "test",
@@ -804,10 +804,72 @@
       ]
     },
     {
-      "name": "Security checks",
+      "name": "6. AI service",
       "item": [
         {
-          "name": "No token is refused",
+          "name": "1. POST - analyze a complaint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "X-Service-Key",
+                  "type": "string"
+                },
+                {
+                  "key": "value",
+                  "value": "{{aiServiceKey}}",
+                  "type": "string"
+                },
+                {
+                  "key": "in",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{aiBaseUrl}}/analyze",
+              "host": [
+                "{{aiBaseUrl}}"
+              ],
+              "path": [
+                "analyze"
+              ]
+            },
+            "description": "Sends the key in the X-Service-Key header. The first call after a restart loads the model and can take about two minutes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I was charged twice for the same order\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative tests (400 / 401 / 403 / 404)",
+      "item": [
+        {
+          "name": "Users: no token -> 401",
           "event": [
             {
               "listen": "test",
@@ -839,7 +901,87 @@
           }
         },
         {
-          "name": "Customer cannot read the admin queue",
+          "name": "Users: fake token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "not-a-real-token",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Auth: wrong password -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"wrong-password-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Admin: customer reads the queue -> 403",
           "event": [
             {
               "listen": "test",
@@ -865,7 +1007,7 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/queue",
+              "raw": "{{baseUrl}}/api/admin/queue?status=Open&page=1&limit=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -873,12 +1015,159 @@
                 "api",
                 "admin",
                 "queue"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Open"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
           }
         },
         {
-          "name": "AI service without a key is refused",
+          "name": "Complaints: admin submits -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Parcel has not arrived\",\n  \"description\": \"My parcel was due last week and the tracking page has not changed.\",\n  \"orderReference\": \"ORD-1001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Complaints: empty body -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Complaints: unknown id -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints/507f1f77bcf86cd799439011",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                "507f1f77bcf86cd799439011"
+              ]
+            }
+          }
+        },
+        {
+          "name": "AI service: no key -> 401",
           "event": [
             {
               "listen": "test",
@@ -907,7 +1196,63 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"text\": \"I was charged twice\"\n}",
+              "raw": "{\n  \"text\": \"I was charged twice for the same order\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "AI service: wrong key -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "X-Service-Key",
+                  "type": "string"
+                },
+                {
+                  "key": "value",
+                  "value": "wrong-key",
+                  "type": "string"
+                },
+                {
+                  "key": "in",
+                  "value": "header",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{aiBaseUrl}}/analyze",
+              "host": [
+                "{{aiBaseUrl}}"
+              ],
+              "path": [
+                "analyze"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I was charged twice for the same order\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -922,7 +1267,7 @@
       "name": "Log out",
       "item": [
         {
-          "name": "Logout",
+          "name": "1. POST - log out",
           "event": [
             {
               "listen": "test",

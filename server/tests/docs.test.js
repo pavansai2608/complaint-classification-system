@@ -72,6 +72,18 @@ describe('OpenAPI spec', () => {
     );
   });
 
+  it('lists the routes in numbered groups and steps', () => {
+    for (const { name } of openapi.tags) {
+      const steps = operations.filter(({ spec }) => spec.tags[0] === name);
+      expect(steps.length).toBeGreaterThan(0);
+      steps.forEach(({ method, spec }, i) => {
+        expect(spec.summary.startsWith(`${i + 1}. ${method.toUpperCase()} - `)).toBe(true);
+      });
+    }
+    const groups = new Set(openapi.tags.map(({ name }) => name));
+    expect(operations.every(({ spec }) => groups.has(spec.tags[0]))).toBe(true);
+  });
+
   it.each(operations.filter(usesBearer))('$name needs a Bearer token in the real app', async ({ method, path }) => {
     const res = await request(appWithDocs())[method](path.replace('{id}', '507f1f77bcf86cd799439011'));
     expect(res.status).toBe(401);
