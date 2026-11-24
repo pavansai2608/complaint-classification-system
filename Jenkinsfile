@@ -1,18 +1,6 @@
 pipeline {
     agent none
 
-    environment {
-        // Images are tagged with the commit they were built from, never
-        // "latest", so what's running in the cluster can always be traced
-        // back to a commit and rolled back to a previous one.
-        //
-        // GIT_COMMIT is null during a lightweight "branch indexing" run
-        // (Jenkins evaluating this file's structure without a real SCM
-        // checkout), so this has to tolerate that instead of crashing the
-        // whole pipeline before any stage runs.
-        TAG = "${env.GIT_COMMIT ? env.GIT_COMMIT.take(12) : 'unknown'}"
-    }
-
     options {
         timestamps()
         // A stuck test run shouldn't hang the pipeline forever. This is
@@ -52,7 +40,7 @@ pipeline {
                 }
 
                 stage('Client (Vitest)') {
-                    agent { docker { image 'node:20-alpine'; args '-u root:root' } }
+                    agent { docker { image 'node:24-alpine'; args '-u root:root' } }
                     steps {
                         dir('client') {
                             sh 'npm ci'
@@ -92,7 +80,11 @@ pipeline {
                     // --pull fetches the newest base image, and OS_PATCH_DATE
                     // re-runs the OS upgrade step once a day, so a cached
                     // layer can never hide a security fix from the scan below.
+                    // Images are tagged with the commit they were built from,
+                    // so what runs in the cluster can always be traced back
+                    // to a commit and rolled back to a previous one.
                     sh '''
+                        TAG=$(git rev-parse --short=12 HEAD)
                         PATCH=$(date +%Y-%m-%d)
                         docker build --pull --build-arg OS_PATCH_DATE=$PATCH -t complaint-server:$TAG ./server
                         docker build --pull --build-arg OS_PATCH_DATE=$PATCH -t complaint-ai-service:$TAG ./ai-service
@@ -134,6 +126,7 @@ pipeline {
                         // it only fails on vulnerabilities there is a patch
                         // for. --exit-code 1 is what actually fails the build.
                         sh '''
+                            TAG=$(git rev-parse --short=12 HEAD)
                             for image in complaint-server complaint-ai-service complaint-client; do
                                 docker run --rm \
                                     -v /var/run/docker.sock:/var/run/docker.sock \
@@ -150,13 +143,34 @@ pipeline {
             }
         }
 
+        stage('Deploy to Minikube') {
+            // Runs the images built from this commit in the local Minikube
+            // cluster, so every new commit on main gets new containers. The
+            // first-time cluster setup is in the README. --context keeps
+            // kubectl on Minikube whatever the current context is.
+            when { branch 'main' }
+            agent any
+            steps {
+                sh '''
+                    TAG=$(git rev-parse --short=12 HEAD)
+                    K="kubectl --context minikube"
+                    for name in server ai-service client; do
+                        minikube image load "complaint-$name:$TAG"
+                        $K set image "deployment/$name" "$name=complaint-$name:$TAG"
+                    done
+                    for name in server ai-service client; do
+                        $K rollout status "deployment/$name" --timeout=6m
+                    done
+                '''
+            }
+        }
+
         stage('E2E (Selenium)') {
             // Render deploys the connected branch by itself on every push
-            // (see render.yaml), so Jenkins no longer has a deploy step.
-            // This drives the real browser flows (register, log in, submit a
-            // complaint) against the live Render site. It first waits for
-            // the server to answer, because a free Render service sleeps
-            // after 15 minutes without traffic.
+            // (see render.yaml). This drives the real browser flows (register,
+            // log in, submit a complaint) against the live Render site. It
+            // first waits for the server to answer, because a free Render
+            // service sleeps after 15 minutes without traffic.
             when { branch 'main' }
             agent any
             environment {

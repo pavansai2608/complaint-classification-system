@@ -46,6 +46,8 @@ const getQueueValidator = [
 ];
 
 module.exports = {
+  VALID_STATUSES,
+  VALID_PRIORITIES,
   createComplaintValidator,
   getComplaintValidator,
   updateStatusValidator,
