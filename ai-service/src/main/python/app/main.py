@@ -16,6 +16,10 @@ docs_enabled = os.getenv("ENABLE_DOCS", "false").lower() == "true"
 
 app = FastAPI(
     title="Complaint AI Service",
+    openapi_tags=[
+        {"name": "0. Public", "description": "No key"},
+        {"name": "6. AI service", "description": "X-Service-Key header"},
+    ],
     docs_url="/docs" if docs_enabled else None,
     redoc_url="/redoc" if docs_enabled else None,
     openapi_url="/openapi.json" if docs_enabled else None,
@@ -30,7 +34,7 @@ class HealthResponse(BaseModel):
     status: str
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse, tags=["0. Public"], summary="1. GET - AI service status")
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
 
@@ -78,6 +82,8 @@ def require_service_key(x_service_key: str | None = Security(service_key_header)
 @app.post(
     "/analyze",
     response_model=AnalyzeResponse,
+    tags=["6. AI service"],
+    summary="1. POST - analyze a complaint",
     dependencies=[Depends(require_service_key)],
     responses={401: {"description": "Missing or invalid service key"}},
 )
