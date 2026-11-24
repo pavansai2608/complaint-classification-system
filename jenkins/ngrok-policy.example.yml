@@ -1,0 +1,17 @@
+# ngrok traffic policy for Jenkins. Copy it outside the repository and replace
+# the secret with the one set on the GitHub webhook.
+#
+# Only the webhook is reachable from the internet, and only with a signature
+# made by GitHub with that secret. The Jenkins site itself is blocked.
+on_http_request:
+  - expressions:
+      - "!(req.method == 'POST' && req.url.path == '/github-webhook/')"
+    actions:
+      - type: deny
+        config:
+          status_code: 404
+  - actions:
+      - type: verify-webhook
+        config:
+          provider: github
+          secret: changeme

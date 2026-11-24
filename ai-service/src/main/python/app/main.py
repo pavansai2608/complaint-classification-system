@@ -1,7 +1,8 @@
 import hmac
 import os
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field, field_validator
 
 from app.category_model import predict_category_with_confidence
@@ -35,7 +36,7 @@ def health() -> HealthResponse:
 
 
 class AnalyzeRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=2000)
+    text: str = Field(..., min_length=1, max_length=2000, examples=["I was charged twice for the same order"])
 
     @field_validator("text")
     @classmethod
@@ -60,7 +61,12 @@ class AnalyzeResponse(BaseModel):
     suggestedReply: str
 
 
-def require_service_key(x_service_key: str | None = Header(default=None)) -> None:
+# Shown as the Authorize button in Swagger UI. auto_error=False leaves the
+# check, and the 401, to require_service_key below.
+service_key_header = APIKeyHeader(name="X-Service-Key", scheme_name="ServiceKey", auto_error=False)
+
+
+def require_service_key(x_service_key: str | None = Security(service_key_header)) -> None:
     # Only the Express server should ever call this endpoint, proven by a
     # shared secret set on both sides - never by trusting the caller's IP
     # or origin, which are both easy to spoof.
@@ -69,7 +75,12 @@ def require_service_key(x_service_key: str | None = Header(default=None)) -> Non
         raise HTTPException(status_code=401, detail="Missing or invalid service key")
 
 
-@app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(require_service_key)])
+@app.post(
+    "/analyze",
+    response_model=AnalyzeResponse,
+    dependencies=[Depends(require_service_key)],
+    responses={401: {"description": "Missing or invalid service key"}},
+)
 def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
     category, confidence = predict_category_with_confidence(payload.text)
     emotion = predict_emotion(payload.text)

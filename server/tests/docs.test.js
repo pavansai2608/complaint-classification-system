@@ -17,6 +17,7 @@ jest.mock('mongoose', () => {
 const request = require('supertest');
 const { createApp } = require('../src/app');
 const { openapi } = require('../src/docs/openapi');
+const { saveToken } = require('../src/docs/swaggerOptions');
 
 function appWithDocs(value) {
   if (value === undefined) delete process.env.ENABLE_DOCS;
@@ -85,4 +86,36 @@ describe('OpenAPI spec', () => {
       expect(res.body.error?.code).not.toBe('UNAUTHORIZED');
     },
   );
+});
+
+describe('Swagger UI token', () => {
+  const ui = { preauthorizeApiKey: jest.fn(), authActions: { logout: jest.fn() } };
+  const response = (path, ok = true) => ({ url: path, ok, body: ok ? { accessToken: 'token-1' } : {} });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.window = { ui, location: { href: 'https://complaint.localhost:8443/api/docs/' } };
+  });
+  afterEach(() => delete global.window);
+
+  it.each(['/api/auth/login', '/api/auth/google', '/api/auth/refresh'])('is saved after %s', (path) => {
+    saveToken(response(path));
+    expect(ui.preauthorizeApiKey).toHaveBeenCalledWith('bearerAuth', 'token-1');
+  });
+
+  it('is not saved after a failed login or another route', () => {
+    saveToken(response('/api/auth/login', false));
+    saveToken(response('/api/users/me'));
+    expect(ui.preauthorizeApiKey).not.toHaveBeenCalled();
+  });
+
+  it('is removed after logout', () => {
+    saveToken(response('/api/auth/logout'));
+    expect(ui.authActions.logout).toHaveBeenCalledWith(['bearerAuth']);
+  });
+
+  it('is sent to the page', async () => {
+    const res = await request(appWithDocs('true')).get('/api/docs/swagger-ui-init.js');
+    expect(res.text).toContain('responseInterceptor');
+  });
 });

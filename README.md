@@ -44,7 +44,9 @@ npm install
 npm run dev
 ```
 
-**API docs.** With `ENABLE_DOCS=true` in `server/.env` and `ai-service/.env`, Swagger UI opens at http://localhost:4000/api/docs (all 16 Express routes) and http://127.0.0.1:8000/docs (AI service). Log in with `POST /api/auth/login`, select **Authorize** and paste the `accessToken`. The pages are off by default.
+**API docs.** With `ENABLE_DOCS=true` in `server/.env` and `ai-service/.env`, Swagger UI opens at http://localhost:4000/api/docs (all 16 Express routes) and http://127.0.0.1:8000/docs (AI service). Log in with `POST /api/auth/login`; the page saves the token into **Authorize** by itself. On the AI service page, select **Authorize** and enter the `AI_SERVICE_KEY`, which is sent as `X-Service-Key`. The pages are off by default.
+
+**Postman.** `postman/` has a collection with all 16 Express routes, both AI service routes and three security checks, plus an environment. Import both, set `adminEmail`, `adminPassword` and `aiServiceKey` in the environment, and run the folders from top to bottom. The login requests save their tokens. Keep real values out of the committed file: `postman/*.local.json` is ignored by git. `baseUrl` is the HTTPS address from [Run on Minikube](#run-on-minikube), because the refresh cookie is only sent over HTTPS there; in Postman, add mkcert's `rootCA.pem` (in the folder `mkcert -CAROOT` prints) under Settings > Certificates > CA certificates. The first AI analysis after a restart loads the model and can take about two minutes.
 
 ## Run with Docker
 
@@ -88,20 +90,20 @@ kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/mongo-init.yaml
 kubectl apply -f k8s/mongo.yaml -f k8s/server.yaml -f k8s/ai-service.yaml -f k8s/client.yaml
 
-# Open the app. On Linux, Minikube's IP is reachable directly:
-echo "$(minikube ip) complaint.local" | sudo tee -a /etc/hosts
-# then open http://complaint.local
+# HTTPS certificate for this machine. mkcert -install asks for your password
+# and makes this machine trust certificates from its own local authority.
+brew install mkcert
+mkcert -install
+mkdir -p certs
+mkcert -cert-file certs/complaint.pem -key-file certs/complaint-key.pem complaint.localhost complaint.local
+kubectl create secret tls complaint-tls --cert=certs/complaint.pem --key=certs/complaint-key.pem
+
+# Open the app
+kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8443:443
+# then open https://complaint.localhost:8443
 ```
 
-On macOS the Docker driver runs the cluster inside a VM whose IP the host
-can't reach, so the line above won't work there. Either run `minikube tunnel`
-in a second terminal and point `complaint.local` at `127.0.0.1` instead, or
-skip the Ingress entirely and forward the client Service:
-
-```bash
-kubectl port-forward svc/client 8080:8080
-# then open http://localhost:8080
-```
+`complaint.localhost` always points at this machine, so it needs no `/etc/hosts` line. `certs/` is ignored by git, and the key of mkcert's local authority must never be shared. For Google Sign-In, add `https://complaint.localhost:8443` to the **Authorized JavaScript origins** in Google Cloud Console.
 
 To open Swagger UI for a local cluster, turn it on and forward the port:
 
@@ -166,11 +168,21 @@ A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vul
 To set this up on a Jenkins instance:
 
 1. Install the **Docker Pipeline** plugin (for the `agent { docker { ... } }` blocks) and the **GitHub Branch Source** plugin.
-2. New Item → **Multibranch Pipeline**, point it at this repo's URL, and set the script path to `Jenkinsfile` (the default).
-3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
+2. New Item → **Multibranch Pipeline**, add a **GitHub** branch source (it handles the webhook) with this repo, discover branches but not pull requests from forks, and set the script path to `Jenkinsfile` (the default).
+3. Connect GitHub to a Jenkins on your own machine with ngrok, as described in [GitHub webhook](#github-webhook).
 4. Under **Manage Jenkins → Credentials**, add `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
 5. The Jenkins host needs `curl`, `python3`, `minikube` and `kubectl` on its `PATH`, access to the Docker socket, and a running Minikube cluster set up as in [Run on Minikube](#run-on-minikube).
 6. Under **Manage Jenkins → System → Extended E-mail Notification**, set the SMTP server (for Gmail: `smtp.gmail.com`, port 465, Use SSL, with a Gmail App Password as the credential) and the Default Recipients. Set the same server under **E-mail Notification** and use **Test configuration** to check it.
+
+### GitHub webhook
+
+ngrok gives a Jenkins on your own machine a public address, so GitHub can tell it about a push at once. The policy below only lets GitHub's signed webhook requests through; the Jenkins site is not reachable from the internet.
+
+1. Copy `jenkins/ngrok-policy.example.yml` outside the repository and replace `changeme` with the output of `openssl rand -hex 32`.
+2. Start ngrok, always with the policy: `ngrok http 8080 --traffic-policy-file <policy file>`
+3. In the GitHub repo's **Settings → Webhooks**, add `https://<your ngrok domain>/github-webhook/` with content type `application/json`, the same secret, and the push event.
+
+ngrok must be running for a push to reach Jenkins at once. The job also scans the repository every minute.
 
 ## Contributing
 

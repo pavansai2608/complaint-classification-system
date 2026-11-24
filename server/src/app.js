@@ -15,6 +15,7 @@ const agentRoutes = require('./routes/agentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const { openapi } = require('./docs/openapi');
+const { swaggerOptions } = require('./docs/swaggerOptions');
 
 function createApp({ clientOrigin }) {
   const app = express();
@@ -52,7 +53,7 @@ function createApp({ clientOrigin }) {
   // Swagger UI is off unless ENABLE_DOCS=true, so the full API map is not
   // public by default.
   if (process.env.ENABLE_DOCS === 'true') {
-    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapi));
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapi, { swaggerOptions }));
   }
 
   app.use('/api/auth', authRoutes);

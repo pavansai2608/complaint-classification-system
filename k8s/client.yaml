@@ -88,10 +88,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: complaint-ingress
+  annotations:
+    # Longer than the 90s the server waits for an AI analysis.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "100"
 spec:
+  ingressClassName: nginx
+  # The certificate and key are in the complaint-tls Secret (see the README),
+  # which is made on each machine and never committed.
+  tls:
+    - hosts: [complaint.localhost, complaint.local]
+      secretName: complaint-tls
   rules:
-    - host: complaint.local
-      http:
+    - host: complaint.localhost
+      http: &app
         paths:
           - path: /
             pathType: Prefix
@@ -100,3 +109,5 @@ spec:
                 name: client
                 port:
                   number: 8080
+    - host: complaint.local
+      http: *app

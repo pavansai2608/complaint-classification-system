@@ -75,7 +75,7 @@ const paths = {
       tags: ['Auth'],
       summary: 'Log in and get a Bearer token',
       description:
-        'Public. Protected by a per-IP rate limit and account lockout. Copy accessToken into Authorize. Also sets the refresh cookie.',
+        'Public. Protected by a per-IP rate limit and account lockout. The page saves accessToken into Authorize. Also sets the refresh cookie.',
       security: open,
       requestBody: body('LoginRequest'),
       responses: { 200: ok('Logged in', session), ...errors(400, 401, 423, 429) },
@@ -341,7 +341,7 @@ const openapi = {
   info: {
     title: 'Complaint Triage API',
     version: '1.0.0',
-    description: 'Log in with POST /api/auth/login, select Authorize and paste the accessToken.',
+    description: 'Log in with POST /api/auth/login. The page saves the accessToken into Authorize.',
   },
   servers: [{ url: '/' }],
   components: {
