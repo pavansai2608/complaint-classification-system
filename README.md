@@ -176,12 +176,13 @@ To set this up on a Jenkins instance:
 
 ### GitHub webhook
 
-ngrok gives a Jenkins on your own machine a public address, so GitHub can tell it about a push at once.
+ngrok gives a Jenkins on your own machine a public address, so GitHub can tell it about a push at once. The policy below only lets GitHub's signed webhook requests through; the Jenkins site is not reachable from the internet.
 
-1. In **Manage Jenkins → Security**, use Jenkins' own user database, turn off sign up, allow only logged-in users, and turn off anonymous read access. Do this before starting ngrok: without a login, anyone with the address could run commands on the machine.
-2. Copy `jenkins/ngrok-policy.example.yml` outside the repository and replace `changeme` with the output of `openssl rand -hex 32`. ngrok then rejects any webhook request that GitHub has not signed with that secret.
-3. Start ngrok: `ngrok http 8080 --traffic-policy-file <policy file>`
-4. In the GitHub repo's **Settings → Webhooks**, add `https://<your ngrok domain>/github-webhook/` with content type `application/json`, the same secret, and the push event.
+1. Copy `jenkins/ngrok-policy.example.yml` outside the repository and replace `changeme` with the output of `openssl rand -hex 32`.
+2. Start ngrok, always with the policy: `ngrok http 8080 --traffic-policy-file <policy file>`
+3. In the GitHub repo's **Settings → Webhooks**, add `https://<your ngrok domain>/github-webhook/` with content type `application/json`, the same secret, and the push event.
+
+ngrok must be running for a push to reach Jenkins at once. The job also scans the repository every minute.
 
 ## Contributing
 
