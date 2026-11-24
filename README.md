@@ -14,7 +14,7 @@ A web app where customers raise and track complaints, and an admin works through
 
 ## Run locally
 
-Requirements: Node.js 20+ and Python 3.11+.
+Requirements: Node.js 24+ and Python 3.11+.
 
 **Server** (http://localhost:4000)
 
@@ -43,6 +43,8 @@ cd client
 npm install
 npm run dev
 ```
+
+**API docs.** With `ENABLE_DOCS=true` in `server/.env` and `ai-service/.env`, Swagger UI opens at http://localhost:4000/api/docs (all 16 Express routes) and http://127.0.0.1:8000/docs (AI service). Log in with `POST /api/auth/login`, select **Authorize** and paste the `accessToken`. The pages are off by default.
 
 ## Run with Docker
 
@@ -101,6 +103,14 @@ kubectl port-forward svc/client 8080:8080
 # then open http://localhost:8080
 ```
 
+To open Swagger UI for a local cluster, turn it on and forward the port:
+
+```bash
+kubectl set env deployment/server deployment/ai-service ENABLE_DOCS=true
+kubectl port-forward svc/server 4000:4000
+# then open http://localhost:4000/api/docs
+```
+
 Check everything came up with `kubectl get pods` (all should be `Running`) and `kubectl get ingress`. `complaint-config` (ConfigMap) holds non-secret settings; secrets come from `k8s/secret.yaml`, which is never committed.
 
 Credentials are scoped so that no component holds more than it needs. Mongo requires authentication (no anonymous access) and, on first startup, `k8s/mongo-init.yaml` creates two users: `complaint_app` with `readWrite` for the server, and `complaint_ai` with `read` only for the ai-service, which just looks up similar past complaints. The root user exists only to create those two. In the same spirit, `complaint-server-secrets` holds the JWT signing keys while `complaint-ai-secrets` does not — the ai-service is the one component handling untrusted complaint text, so a compromise there can neither forge tokens nor write to the database. Mongo's data lives in a PersistentVolumeClaim so it survives pod restarts.
@@ -147,7 +157,7 @@ cd ai-service && source .venv/bin/activate && pyb
 
 ## Continuous integration
 
-A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), and **E2E (Selenium)** (drives the real browser flows against the live Render site). There is no deploy stage: Render redeploys the connected branch by itself on every push (see [Run on Render](#run-on-render)).
+A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), **Deploy to Minikube** (`main` only: loads the three images into Minikube, sets them on the `server`, `ai-service` and `client` deployments and waits for the rollout), and **E2E (Selenium)** (drives the real browser flows against the live Render site). Render redeploys the connected branch by itself on every push (see [Run on Render](#run-on-render)).
 
 A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vulnerability fails the pipeline. **E2E only runs on `main`**; feature branches are tested, built and scanned.
 
@@ -157,7 +167,7 @@ To set this up on a Jenkins instance:
 2. New Item → **Multibranch Pipeline**, point it at this repo's URL, and set the script path to `Jenkinsfile` (the default).
 3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
 4. Under **Manage Jenkins → Credentials**, add `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
-5. The Jenkins host needs `curl` and `python3` on its `PATH` and access to the Docker socket.
+5. The Jenkins host needs `curl`, `python3`, `minikube` and `kubectl` on its `PATH`, access to the Docker socket, and a running Minikube cluster set up as in [Run on Minikube](#run-on-minikube).
 
 ## Contributing
 

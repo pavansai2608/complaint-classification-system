@@ -11,6 +11,9 @@
   "jest": {
     "testEnvironment": "node"
   },
+  "scarfSettings": {
+    "enabled": false
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -23,6 +26,7 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.1",
+    "swagger-ui-express": "^5.0.1",
     "validator": "^13.15.35"
   },
   "devDependencies": {

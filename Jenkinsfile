@@ -52,7 +52,7 @@ pipeline {
                 }
 
                 stage('Client (Vitest)') {
-                    agent { docker { image 'node:20-alpine'; args '-u root:root' } }
+                    agent { docker { image 'node:24-alpine'; args '-u root:root' } }
                     steps {
                         dir('client') {
                             sh 'npm ci'
@@ -150,13 +150,33 @@ pipeline {
             }
         }
 
+        stage('Deploy to Minikube') {
+            // Runs the images built from this commit in the local Minikube
+            // cluster, so every new commit on main gets new containers. The
+            // first-time cluster setup is in the README. --context keeps
+            // kubectl on Minikube whatever the current context is.
+            when { branch 'main' }
+            agent any
+            steps {
+                sh '''
+                    K="kubectl --context minikube"
+                    for name in server ai-service client; do
+                        minikube image load "complaint-$name:$TAG"
+                        $K set image "deployment/$name" "$name=complaint-$name:$TAG"
+                    done
+                    for name in server ai-service client; do
+                        $K rollout status "deployment/$name" --timeout=6m
+                    done
+                '''
+            }
+        }
+
         stage('E2E (Selenium)') {
             // Render deploys the connected branch by itself on every push
-            // (see render.yaml), so Jenkins no longer has a deploy step.
-            // This drives the real browser flows (register, log in, submit a
-            // complaint) against the live Render site. It first waits for
-            // the server to answer, because a free Render service sleeps
-            // after 15 minutes without traffic.
+            // (see render.yaml). This drives the real browser flows (register,
+            // log in, submit a complaint) against the live Render site. It
+            // first waits for the server to answer, because a free Render
+            // service sleeps after 15 minutes without traffic.
             when { branch 'main' }
             agent any
             environment {
