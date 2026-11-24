@@ -193,4 +193,33 @@ pipeline {
             }
         }
     }
+
+    post {
+        // Emails the person whose commit broke the build. The mail server
+        // and the default recipients are set in Manage Jenkins > System >
+        // Extended E-mail Notification.
+        failure {
+            emailext(
+                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """The build failed.
+
+Job: ${env.JOB_NAME}
+Build: #${env.BUILD_NUMBER}
+Branch: ${env.BRANCH_NAME}
+
+Failed tests and console log: ${env.BUILD_URL}console
+""",
+                to: '$DEFAULT_RECIPIENTS',
+                recipientProviders: [developers(), requestor()]
+            )
+        }
+        fixed {
+            emailext(
+                subject: "FIXED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "The build passes again: ${env.BUILD_URL}",
+                to: '$DEFAULT_RECIPIENTS',
+                recipientProviders: [developers(), requestor()]
+            )
+        }
+    }
 }

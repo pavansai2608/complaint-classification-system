@@ -157,7 +157,7 @@ cd ai-service && source .venv/bin/activate && pyb
 
 ## Continuous integration
 
-A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), **Deploy to Minikube** (`main` only: loads the three images into Minikube, sets them on the `server`, `ai-service` and `client` deployments and waits for the rollout), and **E2E (Selenium)** (drives the real browser flows against the live Render site). Render redeploys the connected branch by itself on every push (see [Run on Render](#run-on-render)).
+A `Jenkinsfile` at the repo root runs on every push: **Test** (server, client and ai-service suites, in parallel, each in its own throwaway Docker container so the Jenkins host itself doesn't need Node or Python installed), **Build images** (server, client and ai-service Docker images, tagged with the commit SHA so a deployed image can always be traced back to the commit it came from), **Scan** (`npm audit` for server and client, `pip-audit` for ai-service, and a Trivy image scan of all three, all running in parallel), **Deploy to Minikube** (`main` only: loads the three images into Minikube, sets them on the `server`, `ai-service` and `client` deployments and waits for the rollout), and **E2E (Selenium)** (drives the real browser flows against the live Render site). Render redeploys the connected branch by itself on every push (see [Run on Render](#run-on-render)). When a build fails, Jenkins emails the author of the commit (and the default recipients) a "FAILED" message with a link to the console log, and sends a "FIXED" message when the next build passes again.
 
 A failing test, a HIGH/CRITICAL dependency finding, or a HIGH/CRITICAL image vulnerability fails the pipeline. **E2E only runs on `main`**; feature branches are tested, built and scanned.
 
@@ -168,6 +168,7 @@ To set this up on a Jenkins instance:
 3. Under the GitHub repo's Settings → Webhooks, add a webhook to `<your-jenkins-url>/github-webhook/` so a push triggers the pipeline automatically - or enable "GitHub hook trigger for GITScm polling" on the job if the webhook is already set up org-wide.
 4. Under **Manage Jenkins → Credentials**, add `google-client-id` (Secret text) - the same public `VITE_GOOGLE_CLIENT_ID` value used elsewhere; it isn't a secret, but keeping it out of the file avoids hardcoding an environment-specific value.
 5. The Jenkins host needs `curl`, `python3`, `minikube` and `kubectl` on its `PATH`, access to the Docker socket, and a running Minikube cluster set up as in [Run on Minikube](#run-on-minikube).
+6. Under **Manage Jenkins → System → Extended E-mail Notification**, set the SMTP server (for Gmail: `smtp.gmail.com`, port 465, Use SSL, with a Gmail App Password as the credential) and the Default Recipients. Set the same server under **E-mail Notification** and use **Test configuration** to check it.
 
 ## Contributing
 
