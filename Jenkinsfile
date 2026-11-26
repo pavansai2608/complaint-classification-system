@@ -77,18 +77,18 @@ pipeline {
                 // Jenkins rather than being hardcoded here.
                 withCredentials([string(credentialsId: 'google-client-id',
                                         variable: 'GOOGLE_CLIENT_ID')]) {
-                    // --pull fetches the newest base image, and OS_PATCH_DATE
-                    // re-runs the OS upgrade step once a day, so a cached
+                    // --pull fetches the newest base image, and OS_PATCH_TIME
+                    // re-runs the OS upgrade step on every build, so a cached
                     // layer can never hide a security fix from the scan below.
                     // Images are tagged with the commit they were built from,
                     // so what runs in the cluster can always be traced back
                     // to a commit and rolled back to a previous one.
                     sh '''
                         TAG=$(git rev-parse --short=12 HEAD)
-                        PATCH=$(date +%Y-%m-%d)
-                        docker build --pull --build-arg OS_PATCH_DATE=$PATCH -t complaint-server:$TAG ./server
-                        docker build --pull --build-arg OS_PATCH_DATE=$PATCH -t complaint-ai-service:$TAG ./ai-service
-                        docker build --pull --build-arg OS_PATCH_DATE=$PATCH \
+                        PATCH=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                        docker build --pull --build-arg OS_PATCH_TIME=$PATCH -t complaint-server:$TAG ./server
+                        docker build --pull --build-arg OS_PATCH_TIME=$PATCH -t complaint-ai-service:$TAG ./ai-service
+                        docker build --pull --build-arg OS_PATCH_TIME=$PATCH \
                             --build-arg VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
                             -t complaint-client:$TAG ./client
                     '''
