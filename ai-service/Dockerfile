@@ -12,10 +12,10 @@ RUN grep -v '^torch' requirements.txt > requirements-notorch.txt && \
 FROM python:3.11-slim
 WORKDIR /app
 # Picks up Debian security fixes released after this base image tag was last
-# built. Changing OS_PATCH_DATE makes Docker re-run this step instead of
-# reusing an old cached layer; the pipeline passes today's date.
-ARG OS_PATCH_DATE=unset
-RUN echo "OS packages patched on $OS_PATCH_DATE" && \
+# built. Changing OS_PATCH_TIME makes Docker re-run this step instead of
+# reusing an old cached layer; the pipeline passes the build time.
+ARG OS_PATCH_TIME=unset
+RUN echo "OS packages patched on $OS_PATCH_TIME" && \
     apt-get update && apt-get upgrade -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 RUN useradd --create-home --shell /usr/sbin/nologin appuser

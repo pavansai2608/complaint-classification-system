@@ -14,10 +14,10 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine
 # last built, rather than waiting on an upstream rebuild.
 USER root
 # Changing this value makes Docker re-run the upgrade below instead of
-# reusing an old cached layer. The pipeline passes today's date, so each day's
-# first build picks up that day's OS security fixes.
-ARG OS_PATCH_DATE=unset
-RUN echo "OS packages patched on $OS_PATCH_DATE" && \
+# reusing an old cached layer. The pipeline passes the build time, so every
+# build picks up the latest OS security fixes.
+ARG OS_PATCH_TIME=unset
+RUN echo "OS packages patched on $OS_PATCH_TIME" && \
     apk update && apk upgrade --no-cache && rm -rf /var/cache/apk/*
 USER nginx
 COPY --chown=nginx:nginx --from=build /app/dist /usr/share/nginx/html
